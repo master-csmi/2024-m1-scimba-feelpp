@@ -1,6 +1,9 @@
 \documentclass{article}
 \usepackage{stmaryrd}
+\usepackage{listings}
 \usepackage{url}
+\usepackage{color}
+
 
 \title{Project report: Coupling ScimBa and Feel++}
 
@@ -24,7 +27,15 @@ This report presents the objectives, approach, and roadmap for the coupling of S
 \subsection{Objectives}
 
 This project seeks to facilitate the coupling of ScimBa and Feel++.
-The primary objective is to establish loose coupling between ScimBa and Feel++, enabling efficient utilization of their respective strengths.
+The primary objective is to establish loose coupling between ScimBa and Feel++, enabling efficient utilization of their respective strengths. The general outline as of the start of the project includes the following goals:
+
+\begin{enumerate}
+    \item \textbf{Analysis and Planning:} Analyze the functionalities of ScimBa and Feel++ to identify integration points. Develop a plan for implementing loose coupling between the two libraries.
+    \item \textbf{Implementation:} Implement loose coupling between ScimBa and Feel++ according to the planned approach. Develop methods for generating datasets using Feel++ and integrating them into ScimBa.
+    \item \textbf{Testing and Validation:} Test the integrated system to ensure that communication between ScimBa and Feel++ is seamless. Validate the effectiveness of the coupling by solving complex scientific problems.
+    \item \textbf{Documentation and Reporting:} Document the integration process, including interface definitions and communication protocols. Prepare a final report summarizing the project outcomes and lessons learned.
+\end{enumerate}
+
 
 \subsection{Roadmap}
 \begin{frame}{Github Roadmap}
@@ -35,14 +46,6 @@ The primary objective is to establish loose coupling between ScimBa and Feel++, 
     \end{center}
 \end{frame}
 
-The general outline as of the start of the project includes the following goals:
-
-\begin{enumerate}
-    \item \textbf{Analysis and Planning:} Analyze the functionalities of ScimBa and Feel++ to identify integration points. Develop a plan for implementing loose coupling between the two libraries.
-    \item \textbf{Implementation:} Implement loose coupling between ScimBa and Feel++ according to the planned approach. Develop methods for generating datasets using Feel++ and integrating them into ScimBa.
-    \item \textbf{Testing and Validation:} Test the integrated system to ensure that communication between ScimBa and Feel++ is seamless. Validate the effectiveness of the coupling by solving complex scientific problems.
-    \item \textbf{Documentation and Reporting:} Document the integration process, including interface definitions and communication protocols. Prepare a final report summarizing the project outcomes and lessons learned.
-\end{enumerate}
 
 \section{Getting started}
 \subsection{Creating a Docker container}
@@ -59,21 +62,31 @@ We're using Feel++ as the base for the Docker container adding the requirements 
 
 This contains the latest version of Feel++ and Scimba and should be able to run these commands without error:
 
-\begin{verbatim}
+
+\begin{lstlisting}[language=Python,caption={Docker image with Feel++ and Scimba}, label={lst:python-example}, frame=single, basicstyle=\footnotesize, breaklines=true, commentstyle=\color{mygreen}, keywordstyle=\color{blue}, numbers=left, numbersep=4pt,stringstyle=\color{mymauve}]
 python
 import feelpp
 import scimba
-\end{verbatim}
 
-\begin{frame}{Dockerfile}
-    \begin{center}
-        \includegraphics[width=0.7\textwidth]{images/dockerfile.png}
-    \end{center}
-\end{frame}
+FROM ghcr.io/feelpp/feelpp:jammy
+LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr> , Rayen Tlili <rayen.tlili@etu.unistra.fr>"
+LABEL description="Docker image with Feel++ and Scimba."
+# Install additional dependencies for Scimba
+RUN apt-get update && apt-get install -y \
+python3 \
+python3-pip
+# Install Scimba directly
+RUN pip3 install --no-cache-dir scimba
+# Set the default command to run when the container starts
+CMD ["python3", "-c", "import feelpp; import scimba"]
+\end{lstlisting}
+
+
 
 \subsection{Exploring Feel++ toolboxes}
 
 As of the first meeting with the project supervisors, we've taken a look at the different toolboxes Feel++ has to offer in python:
+
 
 \begin{frame}{}
     \begin{center}
@@ -83,18 +96,17 @@ As of the first meeting with the project supervisors, we've taken a look at the 
 
 An interesting toolbox to start with is the \textbf{Coefficient Form PDEs}.
 
+
 \begin{frame}{}
     \begin{center}
         \includegraphics[width=0.7\textwidth]{images/cfpde.png}
     \end{center}
 \end{frame}
 
-\begin{frame}{}
 
+\begin{frame}{}
 This toolbox allows users to solve PDEs in a generic manner just by inputting the different coefficient values. Implementing an interface which, through Scimba, calls Feel++, solves the PDE and retrieves the solution would be very powerful as it enables us to approach solving for Laplacian and heat transfer problems for example.
 \end{frame}
-
-
 
 
 \section{Bibliography}
