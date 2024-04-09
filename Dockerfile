@@ -1,18 +1,21 @@
-# Use Feel++ as the base image
+# Start with the Feel++ base image
 FROM ghcr.io/feelpp/feelpp:jammy
 
-LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr> , Rayen Tlili <rayen.tlili@etu.unistra.fr>"
-LABEL description="Docker image with Feel++ and Scimba."
+# Set labels for metadata
+LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr>, Rayen Tlili <rayen.tlili@etu.unistra.fr>"
+LABEL description="Docker image with Feel++, Scimba, and PyTorch."
 
-# Install additional dependencies for Scimba
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip
+# Install PyTorch.
+RUN pip3 install torch
 
+# Copy the local Scimba directory to the container.
+COPY scimba/ /scimba/
 
+# Install Scimba and its dependencies
+WORKDIR /scimba
+USER root
 
-# Install Scimba directly
-RUN pip3 install --no-cache-dir scimba
+RUN pip3 install .
 
-# Set the default command to run when the container starts
-CMD ["python3", "-c", "import feelpp; import scimba"]
+# Set the default command to launch Python.
+CMD ["python3"]
