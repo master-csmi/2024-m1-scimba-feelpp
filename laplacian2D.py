@@ -1,35 +1,22 @@
-import feelpp as fpp
-from feelpp.integrate  import integrate
-# import sys
+import feelpp
+import feelpp.toolboxes.core as tb
 
+def feelpp_solve_laplacian_2d_toolbox(f=1.0):
 
-def feelpp_solve_laplacian_2d(f=1.0):
-    app = fpp.Environment(["myapp"], config=fpp.localRepository(""))
+    # Create a toolbox environment
+    app = tb.Environment(["myapp"], config=tb.localRepository(""))
 
-    geo_path = fpp.download( "github:{repo:feelpp,path:feelpp/quickstart/laplacian/cases/feelpp2d/feelpp2d.geo}", worldComm=app.worldCommPtr() )[0]
+    # Download the geo file
+    geo_path = tb.download( "github:{repo:feelpp,path:feelpp/quickstart/laplacian/cases/feelpp2d/feelpp2d.geo}", worldComm=app.worldCommPtr() )[0]
 
-    mesh = fpp.load(fpp.mesh(dim=2, realdim=2), path=geo_path, size=0.1)
+    # Create a model using the toolbox system
+    model = tb.model(dim=2, order=2, filename=geo_path, hsize=0.1)
 
-    Xh = fpp.functionSpace(mesh=mesh, family="P2", order=2)
-    u = Xh.element()  # Solution function 
-    v = Xh.element()  # Test function 
+    # Set the right side function ("f" is the name of the function and str(f) is the expression for the function.)
+    model.addFunction("f", str(f))
 
-    # Poisson Equation problem
-    g = fpp.expr(str(f))  # Constant right side
-    a = fpp.form2(Xh)  # Bilinear form
-    L = fpp.form1(Xh)  # Linear form
-    
-    a.integrate(range=fpp.elements(mesh), expr=fpp.gradt(u) * fpp.grad(v))
-    L.integrate(range=fpp.elements(mesh), expr=g * v)
-    
-    # Dirichlet boundary conditions
-    a.on(range=fpp.boundaryfaces(mesh), rhs = L, element=u, expr=fpp.expr("0"))
-    
-    # Solve the Problem
-    a.solve(rhs=L, solution=u)
-    
-    e = fpp.exporter(mesh=mesh, exp=u, name="solution")
-    e.add("u",u)
-    e.save()
+    # Solve the problem
+    model.solve()
 
-feelpp_solve_laplacian_2d(f=1.0)
+    # Export the solution
+    model.exportResults()
