@@ -228,11 +228,183 @@ An interesting toolbox to start with is the \textbf{Coefficient Form PDEs}:
 \end{frame}
 
 
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+\section{V1}  
+
+\subsection{Objectives for V1}
+
+Once the proper environment was set up in the docker image, we started working on a program that will solve various PDEs using the Feel++ method and the Scimba method to visualize and compare the results. 
+
+\begin{enumerate}
+    \item \textbf{Generate multiple results using Feel++ toolboxes}: Using the CFDE toolbox to solve Poisson equations with varying variables and visualizing them on varying geometries.
+    
+    \item \textbf{Understanding and exporting results using ScimBa}: Explore the ScimBa repository and use examples from Pinns (Physics-informed neural networks) to solve a simple Poisson equation and visualize the results.
+    
+    \item \textbf{Creating a program that is able to use both as solvers}: One of the primary objectives to reach for this project is to create a program that is able to call upon the Feel++ CFPDE toolbox and the ScimBa machine learning algorithms to solve various PDEs.
+    
+    \item \textbf{Comparing the results of both solvers}: The results of both solvers will be able to be visualized and compared in terms of efficiency and accuracy.
+\end{enumerate}
+
+After comparing the results of the Poisson equation using both solvers, the work will be working on adapting the program to work on more complex PDEs and other ScimBa neural networks. 
+
+
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+\newpage
+\subsection{updating the Docker container}
+
+This Dockerfile creates a docker image with Feel++ as a base and installs the dependencies and libraries needed to run ScimBa in that environment.
+
+It copies the public ScimBa repository into the 'scimba' folder and installs it.
+
+We have also added command lines to automate script that let us run the program 'solvelap.py', that uses Feel++ libraries to solve a Laplacian problem.
+
+\\
+
+\begin{lstlisting}[language=docker,caption={Dockerfile for Feel++, Scimba, and Python libraries.},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+
+# Start with the Feel++ base image
+FROM ghcr.io/feelpp/feelpp:jammy
+
+# Set labels for metadata
+LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr>, 
+                  Rayen Tlili <rayen.tlili@etu.unistra.fr>"
+LABEL description="Docker image with Feel++, Scimba, and Python libraries."
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+   xvfb
+
+# Install Python libraries
+RUN pip3 install torch xvfbwrapper pyvista plotly panel
+
+
+# Clone the Scimba repository
+RUN git clone https://gitlab.inria.fr/scimba/scimba.git /scimba
+
+# Install Scimba and its dependencies
+WORKDIR /scimba
+RUN pip3 install .
+
+# Copy the xvfb script into the container
+COPY tools/load_xvfb.sh /usr/local/bin/load_xvfb.sh
+RUN chmod +x /usr/local/bin/load_xvfb.sh
+
+# Set the script to initialize the environment
+CMD ["/usr/local/bin/load_xvfb.sh", "python3"]*
+
+
+\end{lstlisting}
+
+
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+\subsection{Methodology}
+Given the Feel++ documentation and the Poisson class prototype that gives access to results from the Feel++ solver.
+
+Create the right environment for using the CFPDE toolbox:
+\begin{lstlisting}[language=python,caption={},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+
+import sys
+import feelpp
+import feelpp.toolboxes.core as tb
+
+from tools.solvers import Poisso
+sys.argv = ["feelpp_app"]
+e = feelpp.Environment(sys.argv,
+                       opts=tb.toolboxes_options("coefficient-form-pdes", 
+                       "cfpdes"),
+                       config=feelpp.globalRepository('feelpp_cfpde'))
+
+\end{lstlisting}
+
+Solving the Poisson equation with different parameters using the CFPDE toolbox
+
+\begin{lstlisting}[language=Python,caption={},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+
+P = Poisson(dim = 2)
+P(h=0.08,  rhs='-1.0-1*y*x+y*y', g='0', order=1, geofile='geo/disk.geo',
+    plot='2d.png')
+P(h=0.1,  rhs='-1.0-2*y*x+y*y', g='0', order=1, plot='f2.png')
+
+P = Poisson(dim = 2)
+P(h=0.1, diff='{1.0,0,0,x*y}', rhs='1', plot='d1.png')
+P(h=0.1, diff='{1+x,0,0,1+y}', rhs='1', plot='d2.png')
+
+P = Poisson(dim = 3)
+P(h=0.08, diff='{1,0,0,0,x+1,0,0,0,1+x*y}', g = 'x', rhs='x*y*z', 
+geofile = 'geo/cube.geo', plot='3d.png') 
+
+\end{lstlisting}
+
+Adding the option to use a different solver when calling the Poisson Class.
+\begin{lstlisting}[language=Python,caption={},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+def __call__(self,
+               h,                                       # mesh size 
+               order=1,                                 # polynomial order 
+               name='Potential',                        # name of the variable
+               rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)',   # right hand side
+               diff='{1,0,0,1}',                        # diffusion matrix
+               g='0',
+               geofile=None,
+               plot=None,
+               solver='feelpp'):                        # or solver ='scimba'
+    """
+\end{lstlisting}
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+
+Solve using feelpp tools and a space to return the same types of results using ScimBa
+
+\begin{lstlisting}[language=Python,caption={},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+
+if solver == 'feelpp':
+      print(f"Solving the laplacian problem for hsize = {h}...")
+      feelpp_mesh = feelpp.load(feelpp.mesh(dim=self.dim, realdim=self.dim), 
+                                fn, h)
+      self.pb.setMesh(feelpp_mesh)
+      self.pb.setModelProperties(self.model)
+      self.pb.init(buildModelAlgebraicFactory=True)
+      self.pb.printAndSaveInfo()
+      self.pb.solve()
+      self.pb.exportResults()
+    
+      #measures = self.pb.postProcessMeasures().values()
+
+elif solver == 'scimba':
+     print("Solving using Scimba")
+     # the solution process using Scimba
+      return
+      
+\end{lstlisting}
+
+We would wanna use this do generate results exctracted from ScimBa:
+
+\begin{lstlisting}[language=Python,caption={},frame=single, backgroundcolor=\color{gray!10}, basicstyle=\footnotesize,rulecolor=\color{blue}, framexleftmargin=3pt, commentstyle=\color{mygreen}, keywordstyle=\color{blue}]
+
+P(h=0.08, diff='{1,0,0,0,x+1,0,0,0,1+x*y}', g = 'x', rhs='x*y*z', geofile = 
+'geo/cube.geo', plot='3d.png', solver='scimba') 
+
+\end{lstlisting}
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+
+\subsection{Getting familiar with ScimBa}
+
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
 
 \section{Results}
+\subsection{Generating visuals using Feel++}
 
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
