@@ -8,9 +8,7 @@
 
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 \begin{document}
-
 
 \title{Project report: Coupling ScimBa and Feel++}
 
@@ -38,7 +36,6 @@
 \section*{Abstract}\label{Conventions}
 \addcontentsline{toc}{subsection}{\textit{Abstract}}
 \begin{frame}
-
     \item This project report details the integration efforts between ScimBa, emphasizing machine learning, and Feel++, known for its Galerkin methods in PDE solving. The aim is to establish seamless compatibility between the two libraries, fostering advanced computational techniques in scientific research. By combining machine learning with traditional PDE solvers, the project endeavors to propel computational science and engineering forward, enabling efficient data exchange and methodological synergy.
 \end{frame}
 \vspace{2em}
@@ -50,35 +47,77 @@
 \pagenumbering{arabic}
 \section*{Main Content}
 \addcontentsline{toc}{part}{Main Content}
-\newpage
 
 \section{Introduction} \label{Sec: Introduction}
 This report presents the objectives, approach, and roadmap for the coupling of ScimBa and Feel++ libraries. ScimBa is a project aimed at integrating machine learning techniques with traditional scientific computing methods, while Feel++ is a C++ implementation of Galerkin methods for solving partial differential equations (PDEs). The coupling of these two libraries is expected to enhance their capabilities and enable researchers to solve complex scientific problems more effectively.
 
 
-\section{Objectives}
+\section{General objectives}
 
-This project endeavors to seamlessly unite the realms of ScimBa and Feel++, fostering a symbiotic relationship that optimally harnesses their individual strengths. At its core, the project aims to achieve the following objectives:
+The primary objective of this project is to pioneer the integration of ScimBa and Feel++, two robust libraries renowned for their distinct strengths. The specific objectives are:
 
 \begin{enumerate}
-    \item \textbf{Strategic Analysis and Planning}: Delve into the functionalities of both ScimBa and Feel++ to discern strategic integration points. Develop a meticulous plan that charts the course for establishing loose coupling between these libraries, ensuring a harmonious blend of their capabilities.
+    \item \textbf{Streamlined Data Exchange}: Develop a system that streamlines data exchange between ScimBa and Feel++, enabling seamless interaction between the two libraries.
     
-    \item \textbf{Implementation Excellence}: Execute the envisioned integration strategy with precision and finesse. Implement a seamless coupling mechanism between ScimBa and Feel++, meticulously crafting methods to generate datasets within Feel++ and seamlessly integrate them into the ScimBa ecosystem.
+    \item \textbf{User Empowerment}: Create an interface that allows users to leverage the combined strengths of ScimBa and Feel++ effectively, thereby enhancing their computational research capabilities.
     
-    \item \textbf{Thorough Testing and Validation}: Subject the integrated system to rigorous testing and validation protocols, meticulously scrutinizing every aspect to ensure flawless communication between ScimBa and Feel++. Validate the efficacy of the coupling through the successful resolution of intricate scientific problems, affirming its transformative potential.
+    \item \textbf{Integration of Technologies}: Integrate various technologies such as Docker, Python, and Git to create a reproducible environment for the project, apply machine learning techniques, solve PDEs, and manage source code.
     
-    \item \textbf{Comprehensive Documentation and Reporting}: Document the integration process meticulously, capturing interface definitions and communication protocols with meticulous detail. This documentation serves as a beacon for future endeavors, providing invaluable insights into the integration journey. Additionally, prepare a comprehensive report that encapsulates the project's outcomes, distilling key learnings and insights gleaned along the way.
+    \item \textbf{Advancement of Computational Research}: Drive advancements in computational research by creating a platform that unifies machine learning techniques and PDE solving methods, thereby opening new avenues for innovation and discovery.
 \end{enumerate}
 
-Through these objectives, the project aspires not merely to couple ScimBa and Feel++ but to forge a dynamic synergy that propels computational science into new realms of innovation and discovery.
 
  
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-%Github Roadmap
 
+
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
-\section{V0}
+
+\section{Project Status}
+
+This project encompasses a comprehensive overview meticulously detailed within each section, delineating the evolution of our efforts and elucidating the advancements made therein: 
+
+\begin{itemize}
+\item{\hyperref[sec:Section V0]{Section V0}}
+\begin{itemize}
+    \item Create a Docker container
+    \item Make the presentation
+    \item Make the roadmap
+    \item Bibliography
+    \item Write initial report
+\end{itemize}
+
+\item{\hyperref[sec:Section V1]{Section V1}}
+\begin{itemize}
+    \item Update Project Roadmap and Milestones
+    \item Refine Project Scope and Deliverables
+    \item Install git in docker image
+    \item Get familiar with scimba	
+    \item Clone Scimba in docker image	
+    \item Methodology Update 
+    \item Update Project Objectives
+    \item First Results Analysis
+    \item Conduct Technical Review and Code Quality Check 
+\end{itemize}
+
+\item{\hyperref[sec:Section V2]{Section V2}}
+
+(The project is currently in the V1 phase.)
+\end{itemize}
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+
+\section{Section V0}  
+\label{sec:Section V0}
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Github Roadmap
+\newpage
+
 \subsection{Roadmap}
 \begin{figure}[H]
     \centering
@@ -148,6 +187,23 @@ CMD ["python3"]
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
+
+
+\subsection{Feel++}
+
+Feel++ is a library that allows manipulation of mathematical objects to solve Partial Differential Equations (PDEs). It also provides toolboxes for physics-based models and their coupling. These toolboxes include applications for:
+
+\begin{itemize}
+    \item Fluid mechanics
+    \item Solid mechanics
+    \item Heat transfer and conjugate heat transfer
+    \item Fluid-structure interaction
+    \item Electro and magnetostatics
+    \item Thermoelectrics
+    \item Levelset and multifluid
+\end{itemize}
+
+
 \subsection{Exploring Feel++ toolboxes}
 
 As of the first meeting with the project supervisors, we've taken a look at the different toolboxes Feel++ has to offer in Python:
@@ -176,9 +232,9 @@ An interesting toolbox to start with is the \textbf{Coefficient Form PDEs}:
         \item \(f\) : is the source term.
     \end{itemize}
     
-    PDE toolboxes, like Feel++, provide extensive features for managing coefficient forms in diverse PDEs. They simplify tasks such as defining coefficients, setting boundaries, discretizing problems, and employing numerical methods. These capabilities enable researchers and engineers to efficiently tackle complex PDEs, analyze various physical phenomena, and simulate real-world scenarios with ease.
+    PDE toolboxes, such as Feel++, offer features for handling different PDEs. They make it easier to define coefficients, set boundaries, discretize problems, and use numerical methods. This helps users to solve complex PDEs, study physical phenomena, and simulate real-world situations more efficiently.
 
-    \item \textbf{System of PDEs}: A lot of PDE(s) can be written in a generic form, and depends mainly on the definition of coefficients. The generic form that we use is described by the following equation, to find \\
+    \item \textbf{System of PDEs}: Many PDEs can be expressed in a standard form, mainly based on the coefficients' definition. We use the following equation to find this form: \\
     \( u \) : \( \Omega \subset \mathbb{R}^d \longrightarrow \mathbb{R}^n \) with \( d = 2, 3 \) and \( n = 1 \) ( \( u \) is a scalar field) or \( n = d \) ( \( u \) is a vector field) such that
     \[
     d \frac{\partial u}{\partial t} + \nabla \cdot \left( -c \nabla u - \alpha u + \gamma \right) + \beta \cdot \nabla u + au = f \text{ in } \Omega
@@ -194,18 +250,17 @@ An interesting toolbox to start with is the \textbf{Coefficient Form PDEs}:
     \end{itemize}
     Parameters \( \mu \) may depend on the unknown \( u \) and on the space variable \( x \), time \( t \), and other unknowns \( u_1, \ldots, u_N \).
 
-    \item \textbf{Coefficients}: We must also adhere to specific constraints regarding the shape of coefficients, outlined in the following table.
+    \item \textbf{Coefficients}: We also need to follow certain limitations on coefficient shapes, as detailed in the table below.
     \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{images/coeff.png}
+    \includegraphics[width=0.7\textwidth]{images/coeff.png}
     \captionsetup{font={scriptsize}}
     \caption{Shape required by the coefficients}
     \end{figure}
     
-\newpage
-    \item \textbf{Initial Conditions}: Initial conditions specify the starting values for each unknown variable in the equations. These conditions can be defined using expressions or fields, as detailed in the JSON specifications.
+    \item \textbf{Initial Conditions}: Initial Initial conditions set the initial values for each unknown variable in the equations. These conditions can be defined using expressions or fields.
     
-    \item \textbf{ Boundary Conditions}: 
+    \textbf{ Boundary Conditions}: 
     \begin{itemize}
         \item Dirichlet
         \item Neumann
@@ -230,14 +285,22 @@ An interesting toolbox to start with is the \textbf{Coefficient Form PDEs}:
 \end{enumerate}
 \end{frame}
 
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+
+\section{Section V1}
+\label{sec:Section V1}
+
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
-\section{V1}  
 
 \subsection{Objectives for V1}
 
-Once the proper environment was set up in the docker image, we started working on a program that will solve various PDEs using the Feel++ method and the Scimba method to visualize and compare the results. 
+Once the proper environment was set up in the docker image, we started working on a
+program that will solve various PDEs using the Feel++ method and the Scimba method to
+visualize and compare the results.
+
 
 \begin{enumerate}
     \item \textbf{Generate multiple results using Feel++ toolboxes}: Using the CFDE toolbox to solve Poisson equations with varying variables and visualizing them on varying geometries.
@@ -249,8 +312,21 @@ Once the proper environment was set up in the docker image, we started working o
     \item \textbf{Comparing the results of both solvers}: The results of both solvers will be able to be visualized and compared in terms of efficiency and accuracy.
 \end{enumerate}
 
-After comparing the results of the Poisson equation using both solvers, the work will be working on adapting the program to work on more complex PDEs and other ScimBa neural networks. 
+After comparing the results of the Poisson equation using both solvers, the work will be working on adapting the program to work on more complex PDEs and other ScimBa neural networks.
 
+
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Expand Application Scope}: After successfully solving Poisson equations, expand the application of the program to solve other types of PDEs, further demonstrating the versatility of the integrated system.
+    
+    \item \textbf{Optimize Performance}: Continually optimize the performance of the program, ensuring that it runs efficiently and effectively on various hardware configurations.
+    
+    \item \textbf{User-Friendly Interface}: Develop a user-friendly interface that allows users with varying levels of technical expertise to utilize the program effectively.
+    
+    \item \textbf{Documentation and Training}: Provide comprehensive documentation and training materials to help users understand how to use the program and interpret the results.
+    
+    \item \textbf{Community Engagement}: Engage with the user community to gather feedback, identify areas for improvement, and guide future development efforts.
+\end{enumerate}
 
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -476,6 +552,38 @@ Other neural networks available on ScimBa:
 \end{frame}
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+\newpage
+
+\section{Section V2}
+\label{sec:Section V2}
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\newpage
+
+\subsection{Future Work}
+
+The next phase of our project, referred to as V2, has several open issues that need to be addressed:
+
+\begin{itemize}
+    \item Automatize the image generating issue in the docker (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/52}{Issue \#52})
+    \item Solve in ScimBa (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/51}{Issue \#51})
+    \item Return mesh and dofs in \_\_call\_\_ (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/6}{Issue \#6})
+    \item Code Cleanup and Documentation (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/7}{Issue \#7})
+    \item Advisor Code Review (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/9}{Issue \#9})
+    \item Prepare Presentation Slides and Demo (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/11}{Issue \#11})
+    \item Conduct Project Retrospective (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/12}{Issue \#12})
+    \item Develop and Finalize the Project Presentation (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/13}{Issue \#13})
+    \item Consolidate and Finalize the Project Bibliography (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/14}{Issue \#14})
+    \item Compose the Comprehensive Final Project Report (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/10}{Issue \#10})
+    \item Gather Feedback (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/8}{Issue \#8})
+    \item Finalize README and Documentation (\href{https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/8}{Issue \#8})
+\end{itemize}
+
+These issues represent the key tasks that will be undertaken in the V2 phase of the project. Each issue is linked to its corresponding GitHub issue for easy tracking and reference.
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
 
 \section{Results}
@@ -608,7 +716,6 @@ Laplacian on potato and mapping with nn
 
 \section{Conclusion}
 
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 \newpage
 
@@ -617,17 +724,55 @@ Laplacian on potato and mapping with nn
 \bibliographystyle{unsrt}
 \bibliography{References.bib}
 
+\begin{thebibliography}{14}
 
-\begin{itemize}
-    \item Feel++ Documentation: \url{https://docs.feelpp.org/user/latest/index.html}
-    \item ScimBa Documentation: \url{https://sciml.gitlabpages.inria.fr/scimba/}
-    \item Coupling : \url{https://en.wikipedia.org/wiki/Coupling_(computer_programming)}
-    \item Using feel++:
-    \url{https://www.cemosis.fr/events/course-solving-pdes-with-feel/}
-    \item Feel++ documentation:
-    \url{https://book.mso4sc.cemosis.fr/feelpp}
+\bibitem{feelpp}
+Feel++. (n.d.). \textit{Modeling and Quantitative Simulation}. Retrieved from \url{https://feelpp.github.io/mqs/cases/0.109/index.html}
 
-\end{itemize}
+\bibitem{pyfeelpptoolboxes}
+Feel++. (n.d.). \textit{Python Feel++ Toolboxes}. Retrieved from \url{https://docs.feelpp.org/user/latest/python/pyfeelpptoolboxes/index.html}
+
+\bibitem{mso4sc}
+MSO4SC. (n.d.). \textit{Poisson}. Retrieved from \url{https://book.mso4sc.cemosis.fr/cases/0.109/poisson/README/}
+
+\bibitem{zenodo}
+Zenodo. (n.d.). \textit{Zenodo Record}. Retrieved from \url{https://zenodo.org/records/1231527}
+
+
+\bibitem{sciml}
+SciML. (n.d.). \textit{Laplacian 2D Disk}. Retrieved from \url{https://sciml.gitlabpages.inria.fr/scimba/examples/laplacian2DDisk.html}
+
+\bibitem{scimba}
+ScimBa. (n.d.). \textit{ScimBa Repository}. Retrieved from \url{https://gitlab.inria.fr/scimba/scimba}
+
+\bibitem{feelppgithub}
+Feel++. (n.d.). \textit{Feel++ GitHub Repository}. Retrieved from \url{https://github.com/feelpp/feelpp}
+
+\bibitem{cemosis}
+Cemosis. (n.d.). \textit{Course: Solving PDEs with Feel++}. Retrieved from \url{https://www.cemosis.fr/events/course-solving-pdes-with-feel/}
+
+\bibitem{mso4scbook}
+MSO4SC. (n.d.). \textit{Feel++ Book}. Retrieved from \url{https://book.mso4sc.cemosis.fr/feelpp/}
+
+\bibitem{coupling}
+Wikipedia. (n.d.). \textit{Coupling (computer programming)}. Retrieved from \url{https://en.wikipedia.org/wiki/Coupling_(computer_programming)}
+
+\bibitem{scimba2}
+SciML. (n.d.). \textit{ScimBa}. Retrieved from \url{https://sciml.gitlabpages.inria.fr/scimba/}
+
+\bibitem{feelppdocs}
+Feel++. (n.d.). \textit{Feel++ Documentation}. Retrieved from \url{https://docs.feelpp.org/user/latest/index.html}
+
+\bibitem{Quick Start with Docker}
+Feel++. (n.d.). \textit{Quick Start with Docker}. Retrieved from \url{https://docs.feelpp.org/user/latest/using/docker.html}
+
+\bibitem{Mixed Poisson}
+Feel++. (n.d.). \textit{Mixed Poisson}. Retrieved from \url{https://docs.feelpp.org/user/latest/using/toolboxes/hdg_poisson.html}
+
+\end{thebibliography}
+
+
+
 
 \end{document}
 
