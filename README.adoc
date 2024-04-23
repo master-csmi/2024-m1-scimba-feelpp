@@ -1,16 +1,116 @@
-# ScimBa Feel++
+= Coupling ScimBa and Feel++
 
-## Description
-Welcome to Scimba Feel++!
-Feel++ is a computational library for solving partial differential equations (PDEs) using the finite element method. It provides a flexible framework for developing and solving various mathematical models in science and engineering. SCIMBAlab, on the other hand, is a research laboratory focused on scientific computing, imaging, modeling, and bioinformatics.
+[[project-overview]]
+== Project Overview
 
-## Installation
-To get started with Scimba Feel++, follow these steps:
+This project pioneers the integration of https://sciml.gitlabpages.inria.fr/scimba/[ScimBa] and https://docs.feelpp.org/user/latest/index.html[Feelpp], two robust libraries renowned for their distinct strengths.
+Our goal is to streamline data exchange and empower users to leverage the combined strengths of ScimBa and Feel++ effectively, driving advancements in computational research.
 
-Clone this repository to your local machine.
-bash
-Copy code
+
+== Table of Contents 
+
+. <<project-overview, Project Overview>>
+. <<technologies, Technologies>>
+. <<launch, Launch>>
+. <<license, License>>
+. <<project-status,Project Status>>
+. <<contact, Contact>>
+
+
+[[technologies]]
+== Technologies
+
+This project utilizes the following technologies:
+
+* `ScimBa` : A Python library emphasizing machine learning. ScimBa is used in this project to apply machine learning techniques.
+* `Feelpp` : A library known for its Galerkin methods in PDE solving. Feel++ is used to solve PDEs in this project.
+* `Docker`: A platform used to containerize the application. Docker is used to build a reproducible environment for the project.
+* `Python` : The primary programming language used in this project.
+* `Git` : Version control system used for source code management.
+
+Each of these technologies plays a crucial role in the development and operation of the project.
+
+[[launch]]
+== Launch
+
+Follow these steps to get the project up and running on your local machine:
+
+- [ ] Clone the repository
+[source,sh]
+----
 git clone https://github.com/master-csmi/2024-m1-scimba-feelpp.git
+----
 
-## Contact Information
-If you have any questions or need further assistance, feel free to contact us or create an issue on GitHub.
+- [ ] To build a Docker image:
+[source,sh]
+----
+docker buildx build  -t feelpp_scimba:latest .
+----
+
+This will start a Docker container with Feel++ and Scimba installed. 
+
+[source,sh]
+----
+docker buildx build -t my_image_name:my_tag .
+----
+
+In the docker build command, -t my_image_name:my_tag assigns a name (my_image_name) and a tag (my_tag) to the new Docker image. If you don't specify a tag, Docker will use latest as the default tag.
+
+- [ ] Run the Docker container
+[source,sh]
+----
+docker run -it feelpp_scimba:latest
+----
+
+[[project-status]]
+== Project Status
+
+=== Phase
+The project is currently in the V1 phase.
+
+==== Completed Tasks
+- [ ] **V0 phase:**
+
+. Create a Docker container
+. Make the roadmap
+. bibliography
+. Write initial report
+
+- [ ] **V1 phase:**
+
+. First Results Analysis
+. Conduct Technical Review and Code Quality Check 
+. Install git in docker image
+
+- [ ] **V2 phase:**
+
+The following issues are currently open and need to be addressed:
+
+. Automatize the image generating issue in the docker
+. Solve in Scimba (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/52)
+. Return mesh and dofs in __call__ (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/51)
+. Code Cleanup and Documentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/6)
+. Advisor Code Review (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/7)
+. Prepare Presentation Slides and Demo (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/9)
+. Conduct Project Retrospective (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/11)
+. Develop and Finalize the Project Presentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/12)
+. Consolidate and Finalize the Project Bibliography (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/13)
+. Compose the Comprehensive Final Project Report (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/14)
+. Gather Feedback (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/10)
+. Finalize README and Documentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/8)
+
+
+
+[[license]]
+== License
+
+This project is licensed under an Unlicense license. This license does not require you to take the license with you to your project.
+
+[[contact]]
+== Contact
+
+link:https://github.com/helya1[Helya Amiri]
+
+link:https://github.com/rtlili[Rayen Tlili]
+
+link:https://github.com/master-csmi[Organization:Master CSMI]
