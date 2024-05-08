@@ -10,10 +10,11 @@ class Poisson:
   
   - with f,g are set by the user
   """
-  def __init__(self, dim=2):
+  def __init__(self, dim=2, order=1):
 
     self.dim   = dim
     self.model = dict()
+    self.order = order
   
   def genCube(self, filename, h=0.1):
     """
@@ -44,6 +45,7 @@ class Poisson:
         f.write(geo)
 
   
+  
   def __call__(self,
                h,                                       # mesh size 
                order=1,                                 # polynomial order 
@@ -52,20 +54,21 @@ class Poisson:
                diff='{1,0,0,1}',                        # diffusion matrix
                g='0',
                geofile=None,
-               plot=None):
+               plot=None,
+               solver='feelpp'):
     """
     Solves the problem where :
     - h is the mesh size
     - order the polynomial order
     - rhs is the expression of the right-hand side f(x,y)
     """
-    self.pb    = cfpdes(dim=self.dim, keyword=f"cfpdes-{self.dim}d")
+    self.pb    = cfpdes(dim=self.dim, keyword=f"cfpdes-{self.dim}d-p{self.order}")
     self.model = {
       "Name": "Laplacian",
       "ShortName": "Laplacian",
       "Models":
       {
-        f"cfpdes-{self.dim}d":
+        f"cfpdes-{self.dim}d-p{self.order}":
         {
           "equations":"poisson_eq"
         },
@@ -106,7 +109,7 @@ class Poisson:
       },
       "PostProcess":
       {
-        f"cfpdes-{self.dim}d":
+        f"cfpdes-{self.dim}d-p{self.order}":
         {
           "Exports":
           {
@@ -125,18 +128,44 @@ class Poisson:
       self.genCube(fn, h)
     else:
       fn = geofile
+    
+        
+##________________________
 
-    feelpp_mesh = feelpp.load(feelpp.mesh(dim=self.dim, realdim=self.dim), fn, h)
-    self.pb.setMesh(feelpp_mesh)
-    self.pb.setModelProperties(self.model)
-    self.pb.init(buildModelAlgebraicFactory=True)
-    self.pb.printAndSaveInfo()
-    self.pb.solve()
-    self.pb.exportResults()
-    
-    #measures = self.pb.postProcessMeasures().values()
-    #return measures
-    
+    if solver == 'feelpp':
+      print(f"Solving the laplacian problem for hsize = {h}...")
+      feelpp_mesh = feelpp.load(feelpp.mesh(dim=self.dim, realdim=self.dim), fn, h)
+      self.pb.setMesh(feelpp_mesh)
+      self.pb.setModelProperties(self.model)
+      self.pb.init(buildModelAlgebraicFactory=True)
+      self.pb.printAndSaveInfo()
+      self.pb.solve()
+      self.pb.exportResults()
+      #measures = self.pb.postProcessMeasures().values()
+      """
+      try:
+        import pandas as pd
+        df=pd.DataFrame([measures])
+        print(df)
+      except ImportError:
+        print("cannot import pandas, no problem it was just a test")
+    """
+##______________________
+      #mesh = self.pb.mesh()
+      #function_space = self.pb.functionSpace()
+      #dofs = function_space.dofs()
+##________________________
+      #return mesh, dofs
+##________________________
+
+    elif solver == 'scimba':
+      # Placeholder for Scimba solving logic
+      print("Solving using Scimba")
+      return
+      # Here you would implement the solution process using Scimba
+
+##________________________
+
     # Plots
     # sudo apt-get update && sudo apt-get install xvfb && pip install --user xvfbwrapper pyvista plotly panel
     if plot != None:
@@ -144,11 +173,12 @@ class Poisson:
       from xvfbwrapper import Xvfb
       import pyvista as pv 
 
-      vdisplay = Xvfb()
-      vdisplay.start()
-      #pv.set_jupyter_backend('none') 
+      #vdisplay = Xvfb()
+      #vdisplay.start()
+      pv.set_jupyter_backend('static') 
+      pv.start_xvfb()
 
-      mesh = pv.get_reader(f"cfpdes-{self.dim}d.exports/Export.case").read()
+      mesh = pv.get_reader(f"cfpdes-{self.dim}d-p{self.order}.exports/Export.case").read()
       
       pl = pv.Plotter(shape=(1,2))
       pl.add_title(f'Solution P{order}', font_size=18)
@@ -156,14 +186,15 @@ class Poisson:
       pl.subplot(0,1)
       pl.add_title('f=' + rhs, font_size=18)
       pl.add_mesh(mesh[0].copy(), scalars = 'cfpdes.expr.rhs')
-
+      pl.show()
       pl.link_views()
 
       if self.dim ==3:
         pl.view_isometric()
       else:
         pl.view_xy()  # if mesh_2D is on the xy plane.        
-
+      
+      pl.show()
       pl.screenshot(plot)
 
     
