@@ -1,24 +1,33 @@
-# Use Feel++ as the base image
+
+# Start with the Feel++ base image
 FROM ghcr.io/feelpp/feelpp:jammy
 
-LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr> , Rayen Tlili <rayen.tlili@etu.unistra.fr>"
-LABEL description="Docker image with Feel++ and Scimba."
+# Set labels for metadata
+LABEL maintainer="Helya Amiri <helya.amiri@etu.unistra.fr>, Rayen Tlili <rayen.tlili@etu.unistra.fr>"
+LABEL description="Docker image with Feel++, Scimba, and PyTorch."
 
-# Update the system and install additional dependencies for Scimba and Git
+USER root
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    git
+    git \
+   xvfb
 
-    # Install PyTorch
-RUN pip3 install torch
+# Install Python libraries
+RUN pip3 install torch xvfbwrapper pyvista plotly panel
 
-# Check git version
-RUN git --version
 
-# Install Scimba directly
-# The --no-cache-dir option is used to disable the cache during the installation, which can reduce the size of your Docker image.
-RUN pip3 install --no-cache-dir scimba
+# Clone the Scimba repository
+RUN git clone https://gitlab.inria.fr/scimba/scimba.git /scimba
 
-# Set the default command to run when the container starts
-CMD ["python3", "-c", "import feelpp; import scimba"]
+# Install Scimba and its dependencies
+WORKDIR /scimba
+RUN pip3 install .
+
+# Copy the xvfb script into the container
+COPY tools/load_xvfb.sh /usr/local/bin/load_xvfb.sh
+RUN chmod +x /usr/local/bin/load_xvfb.sh
+
+# Set the script to initialize the environment
+CMD ["/usr/local/bin/load_xvfb.sh", "python3"]
+
