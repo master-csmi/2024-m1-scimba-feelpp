@@ -18,16 +18,16 @@ RUN pip3 install torch xvfbwrapper pyvista plotly panel
 
 
 # Clone the Scimba repository
-RUN git clone https://gitlab.inria.fr/scimba/scimba.git /scimba
+RUN git clone https://gitlab.inria.fr/scimba/scimba.git /workspaces/2024-m1-scimba-feelpp/scimba
 
 # Install Scimba and its dependencies
-WORKDIR /scimba
-RUN pip3 install .
+WORKDIR /workspaces/2024-m1-scimba-feelpp/scimba
+RUN pip3 install scimba
 
 # Copy the xvfb script into the container
 COPY tools/load_xvfb.sh /usr/local/bin/load_xvfb.sh
 RUN chmod +x /usr/local/bin/load_xvfb.sh
 
 # Set the script to initialize the environment
-CMD ["/usr/local/bin/load_xvfb.sh", "python3"]
+CMD ["/usr/local/bin/load_xvfb.sh"]
 
