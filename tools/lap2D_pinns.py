@@ -22,7 +22,11 @@ ELLIPSOID_B = 1 / ELLIPSOID_A
 
 
 class PoissonDisk2D(pdes.AbstractPDEx):
-    def __init__(self, space_domain, rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', diff='(1,0,0,1)', g='0',):
+    def __init__(self, space_domain, 
+                 rhs='4*pi*sin(pi*(x*x + y*y)) - 4*pi*pi*(x*x + y*y)*cos(pi*(x*x + y*y))', 
+                 diff='(1,0,0,1)', 
+                 g='0',
+                 u_exact = 'sin(pi*(x*x + y*y))'):
         super().__init__(
             nb_unknowns=1,
             space_domain=space_domain,
@@ -33,13 +37,14 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         self.rhs = rhs
         self.diff = diff
         self.g = g
+        self.u_exact = u_exact 
         self.first_derivative = True
         self.second_derivative = True
 
     def bc_residual(self, w, x, mu, **kwargs):
         u = self.get_variables(w)
         x1, x2 = x.get_coordinates()
-        g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
+        g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         return u - g_evaluated
 
     def residual(self, w, x, mu, **kwargs):
@@ -48,21 +53,23 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
 
-        f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
-        diff = eval(self.diff)
+        f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+        diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         
         return u_xx * diff[0] + u_yy * diff[3] + f  
 
 
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
-        x1_0, x2_0 = self.space_domain.large_domain.center
-        f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
-        return 0.25 * f * (1 - (x1 - x1_0) ** 2 - (x2 - x2_0) ** 2)
+        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
 
 
 class Poisson_2D(pdes.AbstractPDEx):
-    def __init__(self, space_domain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', diff='(1,0,0,1)', g='0',):
+    def __init__(self, space_domain,  
+                 rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', 
+                 diff='(1,0,0,1)', 
+                 g='0',
+                 u_exact='sin(2 * pi * x) * sin(2 * pi * y)'):
         super().__init__(
             nb_unknowns=1,
             space_domain=space_domain,
@@ -72,6 +79,7 @@ class Poisson_2D(pdes.AbstractPDEx):
         self.rhs = rhs
         self.diff = diff
         self.g = g
+        self.u_exact = u_exact
         self.first_derivative = True
         self.second_derivative = True
 
@@ -79,7 +87,7 @@ class Poisson_2D(pdes.AbstractPDEx):
         u = self.get_variables(w)
         # Évaluation de la condition aux limites g
         x1, x2 = x.get_coordinates()
-        g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
+        g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         return u - g_evaluated
 
     def residual(self, w, x, mu, **kwargs):
@@ -88,21 +96,20 @@ class Poisson_2D(pdes.AbstractPDEx):
         u_xx = self.get_variables(w, "w_xx")
         u_yy = self.get_variables(w, "w_yy")
 
-        f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
-        diff = eval(self.diff)
-        
+        f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
+        diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
+    
         return u_xx * diff[0] + u_yy * diff[3] + f  
 
-
+    """
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
         return x1 * (1 - x1) * x2 * (1 - x2) * w
-
+    """
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         alpha = self.get_parameters(mu)
-        return eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin})
-
+        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
 
 class Poisson_2D_ellipse(pdes.AbstractPDEx):
     def __init__(self, space_domain):
@@ -213,8 +220,9 @@ if __name__ == "__main__":
     # Laplacien strong Bc on Square with nn
     xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
     print(xdomain)
-    
-    pde = Poisson_2D(xdomain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', g='0')
+
+    u_exact='sin(2 * pi * x) * sin(2 * pi * y)'       
+    pde = Poisson_2D(xdomain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', g='0',  u_exact=u_exact)
     Run_laplacian2D(pde)
     
     
@@ -222,7 +230,10 @@ if __name__ == "__main__":
     Run_laplacian2D(pde)
 
     xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
-    pde_disk = PoissonDisk2D(space_domain=xdomain)
+    u_exact =  'sin(pi*(x*x + y*y))'
+    rhs = '4*pi*sin(pi*(x*x + y*y)) - 4*pi*pi*(x*x + y*y)*cos(pi*(x*x + y*y))'
+
+    pde_disk = PoissonDisk2D(xdomain,  rhs= rhs, g= '0', u_exact=u_exact)
     Run_laplacian2D(pde_disk)
 
     xdomain = domain.SpaceDomain(
