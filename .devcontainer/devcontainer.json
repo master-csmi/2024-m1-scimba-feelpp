@@ -1,6 +1,6 @@
 {
-	"name": "Feel++ 22.04",
-	"image": "ghcr.io/feelpp/feelpp:jammy",
+	"name": "ScimBa-Feel++ 22.04",
+	"image": "feelpp_scimba:latest",
 	// Add the IDs of extensions you want installed when the container is created in the array below.
 	"extensions": [
 		"ms-vscode.cpptools",

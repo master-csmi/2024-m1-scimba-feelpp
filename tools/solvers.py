@@ -1,7 +1,7 @@
 import os
 import feelpp
 from feelpp.toolboxes.cfpdes import *
-from .lap2D_pinns import Run_laplacian2D, Poisson_2D
+from .lap2D_pinns import Run_laplacian2D, Poisson_2D, PoissonDisk2D
 from scimba.equations import domain
 
 class Poisson:
@@ -161,17 +161,18 @@ class Poisson:
 ##________________________
 
     elif solver == 'scimba':
-      # Placeholder for Scimba solving logic
       print("Solving using Scimba")
+      # Define a disk domain
+      if geofile == 'geo/disk.geo' :
+        xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
+        pde_disk = PoissonDisk2D(xdomain,  rhs= rhs, g= g)
+        Run_laplacian2D(pde_disk)
 
       # Define a square domain
-      xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
-
-      # Create an instance of the Poisson problem
-      pde = Poisson_2D(xdomain)
-
-      # Run the training
-      Run_laplacian2D(pde)
+      elif geofile == None:
+        xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
+        pde = Poisson_2D(xdomain,  rhs= rhs, g= g)
+        Run_laplacian2D(pde)
 ##________________________
 
     # Plots
@@ -190,11 +191,10 @@ class Poisson:
       
       pl = pv.Plotter(shape=(1,2))
       pl.add_title(f'Solution P{order}', font_size=18)
-      pl.add_mesh(mesh[0], scalars = f"cfpdes.poisson_eq.{name}")
+      pl.add_mesh(mesh[0], scalars = f"cfpdes.poisson_eq.{name}", cmap='twilight')
       pl.subplot(0,1)
       pl.add_title('f=' + rhs, font_size=18)
-      pl.add_mesh(mesh[0].copy(), scalars = 'cfpdes.expr.rhs')
-      pl.show()
+      pl.add_mesh(mesh[0].copy(), scalars = 'cfpdes.expr.rhs', cmap='twilight')
       pl.link_views()
 
       if self.dim ==3:
