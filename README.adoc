@@ -35,69 +35,59 @@ Each of these technologies plays a crucial role in the development and operation
 
 Follow these steps to get the project up and running on your local machine:
 
-- [ ] Clone the repository
-[source,sh]
+[source,python]
 ----
+# Clone the repository
+
 git clone https://github.com/master-csmi/2024-m1-scimba-feelpp.git
-----
 
-- [ ] To build a Docker image:
-[source,sh]
-----
+
+# To build a Docker image:
+
 docker buildx build  -t feelpp_scimba:latest .
-----
 
-This will start a Docker container with Feel++ and Scimba installed. 
 
-[source,sh]
-----
-docker buildx build -t my_image_name:my_tag .
-----
+# Run the Docker container
 
-In the docker build command, -t my_image_name:my_tag assigns a name (my_image_name) and a tag (my_tag) to the new Docker image. If you don't specify a tag, Docker will use latest as the default tag.
-
-- [ ] Run the Docker container
-[source,sh]
-----
 docker run -it feelpp_scimba:latest
+----
+
+=== Example
+[source,python]
+----
+# Example usage of the Poisson class
+
+# Create an instance of the Poisson class for a 2-dimensional problem
+P = Poisson(dim=2)
+
+# Solve the Poisson problem with the specified parameters
+P(h=0.08, rhs='-1.0-1*y*x+y*y', g='0', order=1, geofile='geo/disk.geo', plot='2d.png')
 ----
 
 [[project-status]]
 == Project Status
 
-=== Phase
-The project is currently in the V1 phase.
+The project has successfully completed all planned phases, achieving significant milestones in integrating ScimBa and Feel++. The development process was structured into three key phases, each addressing specific objectives and deliverables.
 
-==== Completed Tasks
-- [ ] **V0 phase:**
+==== V0 Phase: Foundation Setup
+* Infrastructure Development: Created a Docker container to ensure a consistent and reproducible development environment.
+* Strategic Planning: Developed a comprehensive roadmap to guide the project's progression.
+* Literature Review: Conducted an extensive bibliography to underpin the project's theoretical framework.
+* Initial Documentation: Authored the initial report outlining project goals and methodologies.
 
-. Create a Docker container
-. Make the roadmap
-. bibliography
-. Write initial report
+==== V1 Phase: Initial Implementation
+* Preliminary Analysis: Conducted the first round of results analysis to validate the integration approach.
+* Quality Assurance: Performed a technical review and code quality check to ensure robust and maintainable code.
+* Tool Integration: Installed Git within the Docker image to facilitate version control and collaboration.
 
-- [ ] **V1 phase:**
-
-. First Results Analysis
-. Conduct Technical Review and Code Quality Check 
-. Install git in docker image
-
-- [ ] **V2 phase:**
-
-The following issues are currently open and need to be addressed:
-
-. Automatize the image generating issue in the docker
-. Solve in Scimba (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/52)
-. Return mesh and dofs in __call__ (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/51)
-. Code Cleanup and Documentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/6)
-. Advisor Code Review (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/7)
-. Prepare Presentation Slides and Demo (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/9)
-. Conduct Project Retrospective (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/11)
-. Develop and Finalize the Project Presentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/12)
-. Consolidate and Finalize the Project Bibliography (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/13)
-. Compose the Comprehensive Final Project Report (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/14)
-. Gather Feedback (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/10)
-. Finalize README and Documentation (https://github.com/master-csmi/2024-m1-scimba-feelpp/issues/8)
+==== V2 Phase: Finalization and Refinement
+* Automation: Automated the image generation process within the Docker environment to streamline workflows.
+* Advanced Integration: Solved key issues in ScimBa, including returning mesh and degrees of freedom (DoFs) in the __call__ method.
+* Code Optimization: Carried out extensive code cleanup and documentation to enhance readability and usability.
+* Presentation Preparation: Developed and refined presentation slides and demo materials for showcasing project outcomes.
+* Peer Review: Completed advisor code review to ensure adherence to best practices and project standards.
+* Final Documentation: Consolidated and finalized the project bibliography and composed a comprehensive final project report.
+* Feedback Collection: Gathered feedback from stakeholders to inform future improvements.
 
 
 
