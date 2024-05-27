@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
    xvfb
 
 # Install Python libraries
-RUN pip3 install torch xvfbwrapper pyvista plotly panel
+RUN pip3 install torch xvfbwrapper pyvista plotly panel ipykernel matplotlib
 
 
 # Clone the Scimba repository
@@ -30,4 +30,3 @@ RUN chmod +x /usr/local/bin/load_xvfb.sh
 
 # Set the script to initialize the environment
 CMD ["/usr/local/bin/load_xvfb.sh"]
-
