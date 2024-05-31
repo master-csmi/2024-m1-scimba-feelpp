@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import scimba.nets.training_tools as training_tools
 import scimba.pinns.pinn_losses as pinn_losses
 import scimba.pinns.pinn_x as pinn_x
@@ -9,7 +8,6 @@ import scimba.sampling.sampling_pde as sampling_pde
 import scimba.sampling.uniform_sampling as uniform_sampling
 import torch
 from scimba.equations import domain, pdes
-from solvers import model
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
@@ -20,7 +18,6 @@ torch.set_default_device(device)
 PI = 3.14159265358979323846
 ELLIPSOID_A = 4 / 3
 ELLIPSOID_B = 1 / ELLIPSOID_A
-
 
 class PoissonDisk2D(pdes.AbstractPDEx):
     def __init__(self, space_domain, 
@@ -58,7 +55,6 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         
         return u_xx * diff[0] + u_yy * diff[3] + f  
-
 
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
@@ -215,6 +211,7 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
 
     trainer.plot(20000, reference_solution=True)
     # trainer.plot_derivative_mu(n_visu=20000)
+    
     return network, pde
 
 
@@ -239,7 +236,74 @@ if __name__ == "__main__":
 
     # Extract solution function u
     u = network.forward
-    print('model = ', model)
-    # Update model with the solution function if needed
-    model["PostProcess"][f"cfpdes-{P.dim}d-p{P.order}"]["Exports"]["expr"]["u"] = u
-    print('\nmodel =', model)
+
+    # Construct model dictionary
+    model = {
+        "Name": "Laplacian",
+        "ShortName": "Laplacian",
+        "Models": {
+            f"cfpdes-{pde.space_domain.dimension}d-p{pde.nb_parameters}": {
+                "equations": "poisson"
+            },
+            "poisson": {
+                "setup": {
+                    "unknown": {
+                        "basis": f"Pch{pde.nb_parameters}",
+                        "name": f"u",
+                        "symbol": "u"
+                    },
+                    "coefficients": {
+                        "c": f"{pde.diff}:x:y" if pde.space_domain.dimension == 2 else f"{pde.diff}:x:y:z",
+                        "f": f"{pde.rhs}:x:y" if pde.space_domain.dimension == 2 else f"{pde.rhs}:x:y:z"
+                    }
+                }
+            }
+        },
+        "Materials": {
+            "Omega": {
+                "markers": ["Omega"]
+            }
+        },
+        "BoundaryConditions": {
+            "poisson": {
+                "Dirichlet": {
+                    "g": {
+                        "markers": ["Gamma_D"],
+                        "expr": f"{pde.g}:x:y"
+                    }
+                }
+            }
+        },
+        "PostProcess": {
+            f"cfpdes-{pde.space_domain.dimension}d-p{pde.nb_parameters}": {
+                "Exports": {
+                    "fields": ["all"],
+                    "expr": {
+                        "rhs": f"{pde.rhs}:x:y" if pde.space_domain.dimension == 2 else f"{pde.rhs}:x:y:z",
+                        "u_exact": f"{pde.u_exact}:x:y" if pde.space_domain.dimension == 2 else f"{pde.u_exact}:x:y:z",
+                        "grad_u_exact": f"{pde.u_exact}:x:y" if pde.space_domain.dimension == 2 else f"{pde.u_exact}:x:y:z",
+                    }
+                },
+                "Measures": {
+                    "Norm": {
+                        "poisson": {
+                            "type": ["L2-error", "H1-error"],
+                            "field": f"poisson.u",
+                            "solution": f"{pde.u_exact}:x:y" if pde.space_domain.dimension == 2 else f"{pde.u_exact}:x:y:z",
+                            "grad_solution": f"{pde.u_exact}:x:y" if pde.space_domain.dimension == 2 else f"{pde.u_exact}:x:y:z",
+                            "markers": "Omega",
+                            "quad": 6
+                        }
+                    },
+                    "Statistics": {
+                        "mystatA": {
+                            "type": ["min", "max", "mean", "integrate"],
+                            "field": f"poisson.u"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    print(model)
