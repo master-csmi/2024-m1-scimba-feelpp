@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
    xvfb
 
 # Install Python libraries
-RUN pip3 install torch xvfbwrapper pyvista plotly panel ipykernel matplotlib tabulate
+RUN pip3 install torch xvfbwrapper pyvista plotly panel ipykernel matplotlib tabulate nbformat
 
 
 # Clone the Scimba repository
