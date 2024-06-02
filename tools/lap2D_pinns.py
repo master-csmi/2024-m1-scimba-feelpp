@@ -217,6 +217,11 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
     # trainer.plot_derivative_mu(n_visu=20000)
     return network, pde
 
+def solution_array(pde):
+    network, pde = Run_laplacian2D(pde)
+    # Extract solution function u
+    u = network.forward
+
 
 if __name__ == "__main__":
     # Laplacien strong Bc on Square with nn

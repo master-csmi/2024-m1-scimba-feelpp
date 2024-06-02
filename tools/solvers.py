@@ -1,15 +1,22 @@
+import sys
 import os
 import feelpp
+import feelpp.toolboxes.core as tb
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import itertools
+import torch
+
 from feelpp.toolboxes.cfpdes import *
+
+from pathlib import Path
 from common import Run_laplacian2D, Poisson_2D, PoissonDisk2D
 from scimba.equations import domain
 from cmap import custom_cmap
-import pandas as pd
-import numpy as np
-
-import plotly.express as px
 from plotly.subplots import make_subplots
-import itertools
+from GmeshRead import mesh2d
+from GeoToMsh import geo_to_msh
 
 class Poisson:
   """
@@ -23,8 +30,9 @@ class Poisson:
 
     self.dim   = dim
     self.model = dict()
-    self.order = order
-  
+    self.order = order  
+##______________________________________________________________________________________________
+
   def genCube(self, filename, h=0.1):
     """
     Generate a cube geometry following the dimension  self.dim
@@ -37,21 +45,23 @@ class Poisson:
     """.format(h, self.dim)
     
     if self.dim==2 :
-        geo+="""
-        Rectangle(1) = {0, 0, 0, 1, 1, 0};
-        Characteristic Length{ PointsOf{ Surface{1}; } } = h;
-        Physical Curve("Gamma_D") = {1,2,3,4};
-        Physical Surface("Omega") = {1};
-        """
+      geo+="""
+      Rectangle(1) = {0, 0, 0, 1, 1, 0};
+      Characteristic Length{ PointsOf{ Surface{1}; } } = h;
+      Physical Curve("Gamma_D") = {1,2,3,4};
+      Physical Surface("Omega") = {1};
+      """
     elif self.dim==3 :
-        geo+="""
-        Box(1) = {0, 0, 0, 1, 1, 1};
-        Characteristic Length{ PointsOf{ Volume{1}; } } = h;
-        Physical Surface("Gamma_D") = {1,2,3,4,5,6};
-        Physical Volume("Omega") = {1};
-        """
+      geo+="""
+      Box(1) = {0, 0, 0, 1, 1, 1};
+      Characteristic Length{ PointsOf{ Volume{1}; } } = h;
+      Physical Surface("Gamma_D") = {1,2,3,4,5,6};
+      Physical Volume("Omega") = {1};
+      """
     with open(filename, 'w') as f:
-        f.write(geo)
+      f.write(geo)
+
+##______________________________________________________________________________________________
 
   def getMesh(self, filename,hsize=0.05,dim=2,verbose=False):
     """create mesh
@@ -64,14 +74,16 @@ class Poisson:
     """
     import os
     for ext in [".msh",".geo"]:
-        f=os.path.splitext(filename)[0]+ext
-        if os.path.exists(f):
-            os.remove(f)
+      f=os.path.splitext(filename)[0]+ext
+      if os.path.exists(f):
+        os.remove(f)
     if verbose:
-        print(f"generate mesh {filename} with hsize={hsize} and dimension={dim}")
+      print(f"generate mesh {filename} with hsize={hsize} and dimension={dim}")
     self.genCube(filename=filename, h=hsize)
     mesh = feelpp.load(feelpp.mesh(dim=dim,realdim=dim), filename, hsize)
     return mesh
+
+##______________________________________________________________________________________________
 
   def feel_solver(self, filename, h, json, dim=2,verbose=False):
     if verbose:
@@ -85,6 +97,46 @@ class Poisson:
     measures = self.pb.postProcessMeasures().values()
     return measures
   
+##______________________________________________________________________________________________
+
+  def scimba_solver(self, filename, h, json, dim = 2, verbose=False):
+    if verbose:
+      print(f"Solving the laplacian problem for hsize = {h}...")    
+    """
+    if filename == 'geo/disk.geo':
+      xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
+      pde = PoissonDisk2D(xdomain, rhs=self.rhs, diff=diff, g=self.g, u_exact=self.u_exact)
+    elif filename is None:
+    """
+    diff = self.diff.replace('{', '(').replace('}', ')')
+    xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
+    pde = Poisson_2D(xdomain, rhs=self.rhs, diff=diff, g=self.g, u_exact=self.u_exact)
+    network, pde = Run_laplacian2D(pde)
+
+    # Extract solution function u
+    u = network.forward
+
+    # Get mesh points
+    geo_to_msh(filename, f"omega-{dim}d.msh", mesh_size=h)
+    mesh = f"omega-{dim}d.msh"
+    my_mesh = mesh2d(mesh)
+    my_mesh.read_mesh()
+    coordinates = my_mesh.Nodes
+
+    # Evaluate the network on mesh points
+    input_tensor = torch.tensor(coordinates, dtype=torch.double)
+    mu = torch.tensor([[0.5]]).repeat(input_tensor.size(0), 1)  # Example mu values
+    solution_tensor = u(input_tensor, mu)
+
+    # Convert the tensor to a NumPy array
+    solution_array = solution_tensor.detach().numpy()
+
+    # Update model with the solution array if needed
+    self.model["PostProcess"][f"cfpdes-{self.dim}d-p{self.order}"]["Exports"]["expr"]["u"] = solution_array
+
+    return solution_array
+
+##______________________________________________________________________________________________
   
   def __call__(self,
                h=0.1,                                       # mesh size 
@@ -106,7 +158,10 @@ class Poisson:
     - rhs is the expression of the right-hand side f(x,y)
     """
     self.measures = dict()
+    self.rhs = rhs
+    self.g = g
     self.u_exact = u_exact
+    self.diff = diff
     self.pb    = cfpdes(dim=self.dim, keyword=f"cfpdes-{self.dim}d-p{self.order}")
     self.model = {
       "Name": "Laplacian",
@@ -193,7 +248,6 @@ class Poisson:
       }
     }
 
-
     fn = None
     if geofile is None:
       fn = f'omega-{self.dim}.geo'
@@ -205,41 +259,13 @@ class Poisson:
   # Solving
 
     if solver == 'feelpp':
-      self.measures = self.feel_solver(h=h, filename= fn, json= self.model, dim=self.dim, verbose=True)
-      
-      """
-      try:
-        import pandas as pd
-        df=pd.DataFrame([measures])
-        print(df)
-      except ImportError:
-        print("cannot import pandas, no problem it was just a test")
-    """
-
+      self.measures = self.feel_solver(filename=fn, h=h, json=self.model, dim=self.dim, verbose=True)
     elif solver == 'scimba':
-      print("Solving using Scimba")
-      diff = diff.replace('{', '(').replace('}', ')')
-      print(diff)
-      # Define a disk domain
-      if geofile == 'disk.geo' :
-        xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
-        pde_disk = PoissonDisk2D(xdomain,  rhs= rhs, diff= diff, g= g, u_exact=self.u_exact)
-        Run_laplacian2D(pde_disk)
-
-      # Define a square domain
-      elif geofile == None:
-        xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
-        
-        pde = Poisson_2D(xdomain, rhs= rhs, diff= diff, g= g, u_exact=self.u_exact)
-        network, pde = Run_laplacian2D(pde)
-        # Extract solution function u
-        u = network.forward
-        # Update model with the solution function if needed
-        self.model["PostProcess"][f"cfpdes-{self.dim}d-p{self.order}"]["Exports"]["expr"]["u"] = u
+      solution = self.scimba_solver(filename=fn, h=h, json=self.model, dim=self.dim, verbose=True)
+      print('solution = ', solution)
 ##________________________
-
-     
-    # Plots
+   
+    # Plotting
     if plot != None:
       
       from xvfbwrapper import Xvfb
@@ -252,33 +278,31 @@ class Poisson:
       pv.set_jupyter_backend('static') 
       #pv.start_xvfb()
       def pv_get_mesh(mesh_path):
-          reader = pv.get_reader(mesh_path)
-          mesh = reader.read()
-          return mesh
+        reader = pv.get_reader(mesh_path)
+        mesh = reader.read()
+        return mesh
 
       def pv_plot(mesh, field, clim=None, cmap=custom_cmap, cpos='xy', show_scalar_bar=True, show_edges=True):
-          mesh.plot(scalars=field, clim=clim, cmap=cmap, cpos=cpos, show_scalar_bar=show_scalar_bar, show_edges=show_edges)
+        mesh.plot(scalars=field, clim=clim, cmap=cmap, cpos=cpos, show_scalar_bar=show_scalar_bar, show_edges=show_edges)
 
       def myplots(dim=2, field=f"cfpdes.poisson.{name}", factor=1, cmap=custom_cmap):
-          mesh = pv_get_mesh((f"cfpdes-{self.dim}d-p{self.order}.exports/Export.case"))
-          #pv_plot(mesh, field)
-          pl = pv.Plotter(shape=(1,2))
+        mesh = pv_get_mesh((f"cfpdes-{self.dim}d-p{self.order}.exports/Export.case"))
+        #pv_plot(mesh, field)
+        pl = pv.Plotter(shape=(1,2))
 
-          pl.add_title(f'Solution P{order}', font_size=18)
-          pl.add_mesh(mesh[0], scalars = f"cfpdes.poisson.{name}", cmap=custom_cmap)
+        pl.add_title(f'Solution P{order}', font_size=18)
+        pl.add_mesh(mesh[0], scalars = f"cfpdes.poisson.{name}", cmap=custom_cmap)
 
-          pl.subplot(0,1)
-          pl.add_title('u_exact=' + u_exact, font_size=10)
-          pl.add_mesh(mesh[0].copy(), scalars = 'cfpdes.expr.u_exact', cmap=custom_cmap)
-          pl.link_views()
-          pl.view_xy()
-          pl.show()
-          pl.screenshot(plot)
+        pl.subplot(0,1)
+        pl.add_title('u_exact=' + u_exact, font_size=10)
+        pl.add_mesh(mesh[0].copy(), scalars = 'cfpdes.expr.u_exact', cmap=custom_cmap)
+        pl.link_views()
+        pl.view_xy()
+        pl.show()
+        pl.screenshot(plot)
 
       myplots(dim=2,factor=0.5)
-import sys
-import feelpp
-import feelpp.toolboxes.core as tb
+
 
 # mandatory things
 sys.argv = ["feelpp_app"]
@@ -297,18 +321,19 @@ rhs = '8*pi*pi*sin(2*pi*x) * sin(2*pi*y)'
 P(rhs=rhs, g='0', order=1, plot='f2.png', u_exact = u_exact)
 P(rhs=rhs, g='0', order=1, solver ='scimba', u_exact = u_exact)
 
-
-laplacian_json = lambda order,dim=2,name="u": P.model
 """
+laplacian_json = lambda order,dim=2,name="u": P.model
+
 with open(f'poisson-{P.dim}d.json', 'w') as f:
       # Write the string to the file
       import json
       f.write(json.dumps(laplacian_json(dim=P.dim,order=1),indent=1))
       # execute the laplacian problem using P1 basis on a mesh of the unit square  of size 0.1
       print('lap  =', P.measures)
-"""
+
 json=laplacian_json
 
 model=[P.dim,P.order,json(dim=P.dim,order=P.order)]
 print(model)
 model = P.model
+"""
