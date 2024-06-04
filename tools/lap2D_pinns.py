@@ -206,11 +206,11 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
 
     if not bc_loss_bool:
         if new_training:
-            trainer.train(epochs=2000, n_collocation=5000, n_data=0)
+            trainer.train(epochs=600, n_collocation=5000, n_data=0)
     else:
         if new_training:
             trainer.train(
-                epochs=2000, n_collocation=5000, n_bc_collocation=1000, n_data=0
+                epochs=600, n_collocation=5000, n_bc_collocation=1000, n_data=0
             )
 
     trainer.plot(20000, reference_solution=True)
