@@ -20,14 +20,3 @@ cmap_name = 'custom_gradient'
 
 # Créer la colormap
 custom_cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=256)
-
-# Utiliser la colormap avec PyVista (exemplaire avec une sphère)
-mesh = pv.Sphere()
-plotter = pv.Plotter()
-plotter.add_mesh(mesh, cmap=custom_cmap)
-plotter.show()
-
-# Afficher la colormap dans Matplotlib
-plt.imshow(np.linspace(0, 1, 256)[None, :], aspect='auto', cmap=custom_cmap)
-plt.colorbar()
-plt.show()

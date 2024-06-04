@@ -10,6 +10,7 @@ import scimba.sampling.uniform_sampling as uniform_sampling
 import torch
 from scimba.equations import domain, pdes
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"torch loaded; device is {device}")
 
@@ -214,6 +215,12 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
 
     trainer.plot(20000, reference_solution=True)
     # trainer.plot_derivative_mu(n_visu=20000)
+    return network, pde
+
+def solution_array(pde):
+    network, pde = Run_laplacian2D(pde)
+    # Extract solution function u
+    u = network.forward
 
 
 if __name__ == "__main__":
@@ -223,38 +230,27 @@ if __name__ == "__main__":
 
     u_exact='sin(2 * pi * x) * sin(2 * pi * y)'       
     pde = Poisson_2D(xdomain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', g='0',  u_exact=u_exact)
-    Run_laplacian2D(pde)
-    
-    
-    pde = Poisson_2D(xdomain, rhs='-1.0-4*y*x+y*y', g='x')
-    Run_laplacian2D(pde)
+    network, pde = Run_laplacian2D(pde)
 
+    """
+    pde = Poisson_2D(xdomain, rhs='-1.0-4*y*x+y*y', g='x')
+    network, pde = Run_laplacian2D(pde)
+    
     xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
     u_exact =  'sin(pi*(x*x + y*y))'
     rhs = '4*pi*sin(pi*(x*x + y*y)) - 4*pi*pi*(x*x + y*y)*cos(pi*(x*x + y*y))'
 
     pde_disk = PoissonDisk2D(xdomain,  rhs= rhs, g= '0', u_exact=u_exact)
-    Run_laplacian2D(pde_disk)
+    network, pde = Run_laplacian2D(pde_disk)
+    """
 
-    xdomain = domain.SpaceDomain(
-        2,
-        domain.DiskBasedDomain(
-            2,
-            [0.0, 0.0],
-            1.0,
-            mapping=disk_to_ellipse,
-            Jacobian=Jacobian_disk_to_ellipse,
-        ),
-    )
-    pde = Poisson_2D_ellipse(xdomain)
-    Run_laplacian2D(pde)
+    # Extract solution function u
+    u = network.forward
+    # Generate example input data and get the solution from the network
+    input_tensor = torch.randn(100, 2)  # Generate some example input data
+    mu = torch.tensor([[0.5]]).repeat(input_tensor.size(0), 1)  # Expand and repeat mu to match the batch size
+    solution_tensor = u(input_tensor, mu)   # Get the solution from the network
 
-    # Laplacian on potato and mapping with nn
-    xdomain = domain.SpaceDomain(
-        2,
-        domain.DiskBasedDomain(
-            2, [0.0, 0.0], 1.0, mapping=disk_to_potato, Jacobian=Jacobian_disk_to_potato
-        ),
-    )
-    pde = Poisson_2D_ellipse(xdomain)
-    Run_laplacian2D(pde, bc_loss_bool=True, w_bc=10, w_res=0.1)
+    # Convert the tensor to a NumPy array
+    solution_array = solution_tensor.detach().numpy()
+    print('solution = ', solution_array)
