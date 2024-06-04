@@ -1,5 +1,5 @@
 SetFactory("OpenCASCADE");
-    h=0.1;
+    h=0.05;
     dim=2;
     
       Rectangle(1) = {0, 0, 0, 1, 1, 0};

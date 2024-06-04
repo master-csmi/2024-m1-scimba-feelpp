@@ -17,8 +17,3 @@ def geo_to_msh(geo_file, msh_file, mesh_size=0.1):
     gmsh.write(msh_file)
 
     gmsh.finalize()
-
-# Example usage
-geo_file = '/workspaces/2024-m1-scimba-feelpp/geo/disk.geo'
-msh_file = '/workspaces/2024-m1-scimba-feelpp/geo/disk.msh'
-geo_to_msh(geo_file, msh_file)
