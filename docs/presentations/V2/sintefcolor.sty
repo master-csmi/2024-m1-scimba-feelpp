@@ -1,0 +1,22 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sintefcolor}[2021/03/04]
+
+\RequirePackage{xcolor}
+\definecolor{maincolor}{RGB/cmyk}{0,102,204/100,50,0,20}
+\definecolor{sintefgrey}{RGB/cmyk}{235,235,230/0,0,0,.1}
+\colorlet{sintefgray}{sintefgrey}
+
+\definecolorset{RGB/cmyk}{sintef}{}{lightgreen, 205,250,225/.23, 0,.20, 0;%
+                                    green,       20,185,120/.73, 0,.67, 0;%
+                                    darkgreen,    0, 70, 40/.93,.43,.92,.52}
+
+% Additional colours
+\definecolorset{RGB/cmyk}{sintef}{}{yellow, 177,153,102/0,13,28,36;%
+purple,153,0,153/0,100,9,40;%
+lilla, 51,51,102/50,50,4,60}
+
+% Deprecated colours for backward compatibility
+\definecolorset{HTML}{sintef}{}{cyan,      22A7E5;%
+                                magenta,   EC008C;%
+                                lightgrey, D8D0C7}
+\colorlet{sinteflightgray}{sinteflightgrey}
