@@ -1,8 +1,6 @@
 import os
 import feelpp
 from feelpp.toolboxes.cfpdes import *
-from tools.lap2D_pinns import Run_laplacian2D, Poisson_2D, PoissonDisk2D
-from scimba.equations import domain
 from tools.GeoToMsh import geo_to_msh
 from tools.GmeshRead import mesh2d
 from tools.cmap import custom_cmap
@@ -84,12 +82,12 @@ class Poisson_feel:
 
 ##______________________________________________________________________________________________
 
-  def feel_solver(self, filename, h, json, dim=2,verbose=False):
+  def feel_solver(self, filename, h, dim=2,verbose=False):
     if verbose:
       print(f"Solving a Poisson problem for hsize = {h}...")
     feelpp_mesh = feelpp.load(feelpp.mesh(dim=self.dim, realdim=self.dim), filename, h)
     self.pb.setMesh(feelpp_mesh)       
-    self.pb.setModelProperties(json)
+    self.pb.setModelProperties(self.model)
     self.pb.init(buildModelAlgebraicFactory=True)
     self.pb.printAndSaveInfo()
     self.pb.solve()
@@ -98,7 +96,25 @@ class Poisson_feel:
     return measures
   
 ##______________________________________________________________________________________________
-
+  
+  """
+  def runLaplacianPk(self, df, model, fn = f'omega-{2}.geo', verbose=False):
+      #Generate the Pk case
+      meas = dict()
+      dim, order, json = model
+      for h in df['h']:
+        m = self.measures #feel_solver(filename=fn, h=h, dim=self.dim, verbose=True)    
+        print('keys = ', m.keys())
+        for norm in ['L2', 'H1']:      
+          meas.setdefault(f'P{order}-Norm_poisson_{norm}-error', [])
+          meas[f'P{order}-Norm_poisson_{norm}-error'].append(m.pop(f'Norm_poisson_{norm}-error'))    
+      df = df.assign(**meas)
+      for norm in ['L2', 'H1']:
+        df[f'P{order}-poisson_{norm}-convergence-rate']=np.log2(df[f'P{order}-Norm_poisson_{norm}-error'].shift() / df[f'P{order}-Norm_poisson_{norm}-error']) / np.log2(df['h'].shift() / df['h'])
+      return df
+    """
+    
+##______________________________________________________________________________________________
   
   def __call__(self,
                h=0.05,                                       # mesh size 
@@ -119,15 +135,17 @@ class Poisson_feel:
     - order the polynomial order
     - rhs is the expression of the right-hand side f(x,y)
     """
+    self.order = order
     self.measures = dict()
     self.rhs = rhs
     self.g = g
     self.u_exact = u_exact
+    self.grad_u_exact = grad_u_exact
     self.diff = diff
-    self.pb    = cfpdes(dim=self.dim, keyword=f"cfpdes-{self.dim}d-p{self.order}")
+    self.pb = cfpdes(dim=self.dim, keyword=f"cfpdes-{self.dim}d-p{self.order}")
     self.model = {
-      "Name": "Laplacian",
-      "ShortName": "Laplacian",
+      "Name": "Poisson",
+      "ShortName": "Poisson",
       "Models":
       {
         f"cfpdes-{self.dim}d-p{self.order}":
@@ -137,13 +155,13 @@ class Poisson_feel:
         "poisson":{
           "setup":{
             "unknown":{
-              "basis":f"Pch{order}",
+              "basis":f"Pch{self.order}",
               "name":f"{name}",
               "symbol":"u"
             },
             "coefficients":{
-              "c": f"{diff}:x:y" if self.dim == 2 else f"{diff}:x:y:z",
-              "f": f"{rhs}:x:y"  if self.dim == 2 else f"{rhs}:x:y:z"
+              "c": f"{self.diff}:x:y" if self.dim == 2 else f"{self.diff}:x:y:z",
+              "f": f"{self.rhs}:x:y"  if self.dim == 2 else f"{self.rhs}:x:y:z"
             }
           }
         }
@@ -164,7 +182,7 @@ class Poisson_feel:
             "g":
             {
               "markers":["Gamma_D"],
-              "expr":f"{g}:x:y"
+              "expr":f"{self.g}:x:y"
             }
           }
         }
@@ -177,9 +195,9 @@ class Poisson_feel:
           {
             "fields":["all"],
             "expr":{
-              "rhs": f"{rhs}:x:y" if self.dim == 2 else f"{rhs}:x:y:z",
-              "u_exact" : f"{u_exact}:x:y" if self.dim==2 else f"{u_exact}:x:y:z",
-              "grad_u_exact" : f"{grad_u_exact}:x:y" if self.dim==2 else f"{grad_u_exact}:x:y:z",
+              "rhs": f"{self.rhs}:x:y" if self.dim == 2 else f"{self.rhs}:x:y:z",
+              "u_exact" : f"{self.u_exact}:x:y" if self.dim==2 else f"{self.u_exact}:x:y:z",
+              "grad_u_exact" : f"{self.grad_u_exact}:x:y" if self.dim==2 else f"{self.grad_u_exact}:x:y:z",
             }
           },
             "Measures" :
@@ -190,8 +208,8 @@ class Poisson_feel:
                   {
                      "type":["L2-error", "H1-error"],
                      "field":f"poisson.{name}",
-                     "solution": f"{u_exact}:x:y" if self.dim==2 else f"{u_exact}:x:y:z",
-                     "grad_solution": f"{grad_u_exact}:x:y" if self.dim==2 else f"{grad_u_exact}:x:y:z",
+                     "solution": f"{self.u_exact}:x:y" if self.dim==2 else f"{self.u_exact}:x:y:z",
+                     "grad_solution": f"{self.grad_u_exact}:x:y" if self.dim==2 else f"{self.grad_u_exact}:x:y:z",
                      "markers":"Omega",
                      "quad":6
                  }
@@ -218,7 +236,7 @@ class Poisson_feel:
 ##________________________
 
   # Solving
-    self.measures = self.feel_solver(filename=fn, h=h, json=self.model, dim=self.dim, verbose=True)
+  #  self.measures = self.feel_solver(filename=fn, h=h, dim=self.dim, verbose=True)
 ##________________________
 
      
@@ -260,3 +278,5 @@ class Poisson_feel:
           pl.screenshot(plot)
 
       myplots(dim=2,factor=0.5)
+
+
