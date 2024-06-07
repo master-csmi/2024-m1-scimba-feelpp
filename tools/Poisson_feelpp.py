@@ -234,9 +234,8 @@ class Poisson_feel:
     else:
       fn = geofile      
 ##________________________
-
   # Solving
-  #  self.measures = self.feel_solver(filename=fn, h=h, dim=self.dim, verbose=True)
+    self.measures = self.feel_solver(filename=fn, h=h, dim=self.dim, verbose=False)
 ##________________________
 
      
@@ -263,6 +262,7 @@ class Poisson_feel:
       def myplots(dim=2, field=f"cfpdes.poisson.{name}", factor=1, cmap=custom_cmap):
           mesh = pv_get_mesh((f"cfpdes-{self.dim}d-p{self.order}.exports/Export.case"))
           #pv_plot(mesh, field)
+        
           pl = pv.Plotter(shape=(1,2))
 
           pl.add_title(f'Solution P{order}', font_size=18)
@@ -276,7 +276,9 @@ class Poisson_feel:
           pl.view_xy()
           pl.show()
           pl.screenshot(plot)
-
+          
       myplots(dim=2,factor=0.5)
+      #myplots(dim=2, field = f"cfpdes.expr.u_exact" ,factor=0.5)
+      
 
 
