@@ -84,8 +84,14 @@ e = feelpp.Environment(sys.argv,
 P = Poisson_feel(dim=2)
 
 # Solve the Poisson problem with the specified parameters
-P(h=0.08, rhs='-1.0-1*y*x+y*y', g='0', geofile='geo/disk.geo')
-
+P(h=0.05,                                         # mesh size 
+    name='u',                                     # name of the variable u
+    rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)',        # right hand side
+    diff='{1,0,0,1}',                             # diffusion matrix
+    g='0',                                        # Dirichlet boundary condition            
+    geofile=None,                                 # domain geometry file          
+    plot=None,                                    # plot the solution
+    )
 ----
 
 [[project-status]]
