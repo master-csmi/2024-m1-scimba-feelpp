@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pyvista as pv
 
-from tools.GmeshRead import mesh2d
+#from tools.GmeshRead import mesh2d
 
 def extract_solution(file_path):
     # Fichier .case
@@ -33,16 +33,6 @@ def extract_solution(file_path):
     return solution
 
 
-def read_nodes(mesh, verbose = True):
-    my_mesh = mesh2d(mesh)
-    my_mesh.read_mesh()
-    coordinates = my_mesh.Nodes
-    if verbose :
-        print('\nnumber of nodes = ', my_mesh.Nnodes)
-        for i in range(my_mesh.Nnodes):
-            print(f'\n x_{i} , y_{i} = ', coordinates[i])
-    return my_mesh, coordinates
-
 # mandatory things
 sys.argv = ["feelpp_app"]
 e = feelpp.Environment(sys.argv,
@@ -62,7 +52,7 @@ e = feelpp.Environment(sys.argv,
 
 
 # Define the parameter values you want to iterate over
-h_values = [0.1, 0.05]  #, 0.025, 0.0125]  
+h_values = [0.1, 0.05, 0.025, 0.0125]  
 
 rhs_values = ['4* pi * (-cos(pi* (x*x + y*y)) + pi * (x*x + y*y)* sin(pi* (x*x + y*y)))', 
               '8*pi*pi*sin(2*pi*x) * sin(2*pi*y)',
@@ -90,24 +80,38 @@ geofile_values = ['omega-2.geo']
 output_dir = 'solutions'
 os.makedirs(output_dir, exist_ok=True)
 
-# Iterate over the parameter values
-for geofile in geofile_values:
-    for h in h_values:
-        for rhs, g, diff in zip(rhs_values, g_values, diff_values):
-            # Create an instance of P with the current parameters
-            P = Poisson_feel(dim=2)
-            P(h=h, rhs=rhs, diff=diff, g=g, geofile=geofile)
-            
-            # Extracting the solution
-            solution_path = f"cfpdes-{P.dim}d-p{P.order}.exports/Export.case"
-            poisson_u = extract_solution(solution_path)
-            
-            #  Create a filename for the current solution
-            filename = f'solution_h{h}_rhs{rhs.replace("*", "")}_g{g}_geo{os.path.basename(geofile)}.npy'
-            filepath = os.path.join(output_dir, filename)
-            
-            # Save the solution vector
-            np.save(filepath, solution_path)
+# Define an empty list to store solution arrays and corresponding parameter information
+all_solutions = []
 
-            print(f'Solution saved to {filepath}')
+h = 0.1
+# Iterate over the parameter values
+
+for rhs, g, diff in zip(rhs_values, g_values, diff_values):
+    # Create an instance of P with the current parameters
+    P = Poisson_feel(dim=2)
+    P(h=h, rhs=rhs, diff=diff, g=g)
+    
+    # Extracting the solution
+    solution_path = f"cfpdes-{P.dim}d-p{P.order}.exports/Export.case"
+    poisson_u = extract_solution(solution_path)
+    
+    # Add the solution array and parameter information to the list
+    solution_info = {
+        'h': h,
+        'rhs': rhs,
+        'g': g,
+        'diff': diff,
+        'solution': poisson_u         
+    }
+    print(solution_info)
+    all_solutions.append(solution_info)
+
+# Define the path to save the .npz file
+npz_file_path = os.path.join(output_dir, 'all_solutions.npz')
+
+# Save all solutions and corresponding parameter information to a single .npz file
+np.savez(npz_file_path, solutions=all_solutions)
+
+print(f'All solutions saved to {npz_file_path}')
+
 
