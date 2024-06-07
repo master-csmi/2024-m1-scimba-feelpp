@@ -39,12 +39,12 @@ Open the project in Visual Studio Code:
 [source,python]
 ----
 # Clone the repository
-
 git clone https://github.com/master-csmi/2024-m1-scimba-feelpp.git
 
+# Change branch
+git checkout feelpp-solver
 
 # To build a Docker image:
-
 docker buildx build  -t feelpp_scimba:latest .
 
 
