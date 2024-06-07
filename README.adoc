@@ -59,49 +59,39 @@ docker run -it feelpp_scimba:latest
 === Example
 [source,python]
 ----
+import os
 import sys
 import feelpp
 import feelpp.toolboxes.core as tb
-from feelpp.toolboxes.core.environment import Environment  # Ensure correct import path
+from tools.Poisson_feelpp import Poisson_feel
 
-# Mandatory setup
+# mandatory things
 sys.argv = ["feelpp_app"]
-e = Environment(sys.argv,
-                opts=tb.toolboxes_options("coefficient-form-pdes", "cfpdes"),
-                config=feelpp.localRepository('feelpp_cfpde'))
+e = feelpp.Environment(sys.argv,
+                       opts=tb.toolboxes_options("coefficient-form-pdes", "cfpdes"),
+                       config=feelpp.localRepository('feelpp_cfpde'))
+
+# ------------------------------------------------------------------------- #
+# Poisson problem
+# - div (diff * grad (u)) = f    in Omega
+#                     u   = g    in Gamma_D
+# Omega = domain, either cube or ball
+# Approx = lagrange Pk of order order
+# mesh of size h
 
 # Example usage of the Poisson class
 # Create an instance of the Poisson class for a 2-dimensional problem
-P = Poisson(dim=2)
+P = Poisson_feel(dim=2)
 
 # Solve the Poisson problem with the specified parameters
-P(h=0.08, rhs='-1.0-1*y*x+y*y', g='0', order=1, geofile='geo/disk.geo', plot='2d.png')
+P(h=0.08, rhs='-1.0-1*y*x+y*y', g='0', geofile='geo/disk.geo')
+
 ----
 
 [[project-status]]
 == Project Status
 
-The project has completed all planned phases. The development process was structured into three key phases, each addressing specific objectives and deliverables.
-
-==== V0 Phase: Foundation Setup
-* Infrastructure Development: Created a Docker container to ensure a consistent and reproducible development environment.
-* Strategic Planning: Developed a comprehensive roadmap to guide the project's progression.
-* Literature Review: Conducted an extensive bibliography to underpin the project's theoretical framework.
-* Initial Documentation: Authored the initial report outlining project goals and methodologies.
-
-==== V1 Phase: Initial Implementation
-* Preliminary Analysis: Conducted the first round of results analysis to validate the integration approach.
-* Quality Assurance: Performed a technical review and code quality check to ensure robust and maintainable code.
-* Tool Integration: Installed Git within the Docker image to facilitate version control and collaboration.
-
-==== V2 Phase: Finalization and Refinement
-* Automation: Automated the image generation process within the Docker environment to streamline workflows.
-* Advanced Integration: Solved key issues in ScimBa, including returning a solution and its plot in the __call__ method.
-* Code Optimization: Carried out extensive code cleanup and documentation to enhance readability and usability.
-* Presentation Preparation: Developed and refined presentation slides and demo materials for showcasing project outcomes.
-* Peer Review: Completed advisor code review to ensure adherence to best practices and project standards.
-* Final Documentation: Consolidated and finalized the project bibliography and composed a comprehensive final project report.
-* Feedback Collection: Gathered feedback from stakeholders to inform future improvements.
+The project has completed all planned phases.
 
 [[contact]]
 == Contact

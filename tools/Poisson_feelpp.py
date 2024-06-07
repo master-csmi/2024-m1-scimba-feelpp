@@ -1,7 +1,6 @@
 import os
 import feelpp
 from feelpp.toolboxes.cfpdes import *
-from tools.GeoToMsh import geo_to_msh
 from tools.GmeshRead import mesh2d
 from tools.cmap import custom_cmap
 
@@ -118,13 +117,13 @@ class Poisson_feel:
   
   def __call__(self,
                h=0.05,                                       # mesh size 
-               order=1,                                 # polynomial order 
-               name='u',                                # name of the variable u
-               rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)',   # right hand side
-               diff='{1,0,0,1}',                        # diffusion matrix
-               g='0',
-               geofile=None,
-               plot='plot.png',
+               order=1,                                      # polynomial order 
+               name='u',                                     # name of the variable u
+               rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)',        # right hand side
+               diff='{1,0,0,1}',                             # diffusion matrix
+               g='0',                                        # Dirichlet boundary condition            
+               geofile=None,                                 # domain geometry file          
+               plot=None,
                u_exact='sin(2 * pi * x) * sin(2 * pi * y)',
                grad_u_exact = '{2*pi*cos(2*pi*x)*sin(2*pi*y),2*pi*sin(2*pi*x)*cos(2*pi*y)}' 
 
@@ -236,6 +235,36 @@ class Poisson_feel:
 ##________________________
   # Solving
     self.measures = self.feel_solver(filename=fn, h=h, dim=self.dim, verbose=False)
+
+
+    def extract_solution(file_path):
+      # Fichier .case
+      #file_path = '/workspaces/2024-m1-scimba-feelpp/feelppdb/feelpp_cfpde/np_1/cfpdes-2d-p1.exports/Export.case'
+      data = pv.read(file_path)
+
+      # Extraire les données de chaque bloc
+      for i, block in enumerate(data):
+          if block is None:
+              continue
+          
+          solution = block.point_data['cfpdes.poisson.u']
+          print("Valeurs de 'cfpdes.poisson.u':")
+          print(solution) 
+      return solution
+    
+    def read_nodes(mesh, verbose = True):
+      my_mesh = mesh2d(mesh)
+      my_mesh.read_mesh()
+      coordinates = my_mesh.Nodes
+      if verbose :
+          print('\nnumber of nodes = ', my_mesh.Nnodes)
+          for i in range(my_mesh.Nnodes):
+              print(f'\n x_{i} , y_{i} = ', coordinates[i])
+      return my_mesh, coordinates
+    
+    file_path = f"cfpdes-{P.dim}d-p{P.order}.exports/Export.case"
+    poisson_u = extract_solution(file_path)
+
 ##________________________
 
      
