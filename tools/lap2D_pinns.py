@@ -57,12 +57,14 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
         diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         
-        return u_xx * diff[0] + u_yy * diff[3] + f  
+        return alpha*(u_xx * diff[0] + u_yy * diff[3] + f )
 
 
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
-        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+        alpha = self.get_parameters(mu)
+
+        return alpha *eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
 
 
 class Poisson_2D(pdes.AbstractPDEx):
@@ -100,17 +102,16 @@ class Poisson_2D(pdes.AbstractPDEx):
         f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
     
-        return u_xx * diff[0] + u_yy * diff[3] + f  
+        return alpha *(u_xx * diff[0] + u_yy * diff[3] + f)  
 
-    """
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
         return x1 * (1 - x1) * x2 * (1 - x2) * w
-    """
+
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         alpha = self.get_parameters(mu)
-        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+        return alpha * eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
 
 class Poisson_2D_ellipse(pdes.AbstractPDEx):
     def __init__(self, space_domain):
@@ -206,21 +207,16 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
 
     if not bc_loss_bool:
         if new_training:
-            trainer.train(epochs=100, n_collocation=5000, n_data=0)
+            trainer.train(epochs=600, n_collocation=5000, n_data=0)
     else:
         if new_training:
             trainer.train(
-                epochs=100, n_collocation=5000, n_bc_collocation=1000, n_data=0
+                epochs=600, n_collocation=5000, n_bc_collocation=1000, n_data=0
             )
 
     trainer.plot(20000, reference_solution=True)
-    # trainer.plot_derivative_mu(n_visu=20000)
+    #trainer.plot_derivative_mu(n_visu=20000)
     return network, pde
-
-def solution_array(pde):
-    network, pde = Run_laplacian2D(pde)
-    # Extract solution function u
-    u = network.forward
 
 
 if __name__ == "__main__":
@@ -232,8 +228,8 @@ if __name__ == "__main__":
     pde = Poisson_2D(xdomain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', g='0',  u_exact=u_exact)
     network, pde = Run_laplacian2D(pde)
 
-    """
-    pde = Poisson_2D(xdomain, rhs='-1.0-4*y*x+y*y', g='x')
+    u_exact = 'x*x/(1+x) + y*y/(1+y)'
+    pde = Poisson_2D(xdomain, rhs='4', diff='(1+x,0,0,1+y)', g='x*x/(1+x) + y*y/(1+y)', u_exact=u_exact)
     network, pde = Run_laplacian2D(pde)
     
     xdomain = domain.SpaceDomain(2, domain.DiskBasedDomain(2, center=[0.0, 0.0], radius=1.0))
@@ -242,7 +238,7 @@ if __name__ == "__main__":
 
     pde_disk = PoissonDisk2D(xdomain,  rhs= rhs, g= '0', u_exact=u_exact)
     network, pde = Run_laplacian2D(pde_disk)
-    """
+    
 
     # Extract solution function u
     u = network.forward
