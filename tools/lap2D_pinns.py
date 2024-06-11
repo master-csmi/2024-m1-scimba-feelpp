@@ -42,6 +42,9 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         self.first_derivative = True
         self.second_derivative = True
 
+    def make_data(self, n_data):
+        pass
+
     def bc_residual(self, w, x, mu, **kwargs):
         u = self.get_variables(w)
         x1, x2 = x.get_coordinates()
@@ -57,14 +60,14 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
         diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         
-        return alpha*(u_xx * diff[0] + u_yy * diff[3] + f )
+        return (u_xx * diff[0] + u_yy * diff[3] + f )
 
 
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         alpha = self.get_parameters(mu)
 
-        return alpha *eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
 
 
 class Poisson_2D(pdes.AbstractPDEx):
@@ -86,6 +89,9 @@ class Poisson_2D(pdes.AbstractPDEx):
         self.first_derivative = True
         self.second_derivative = True
 
+    def make_data(self, n_data):
+        pass
+
     def bc_residual(self, w, x, mu, **kwargs):
         u = self.get_variables(w)
         # Évaluation de la condition aux limites g
@@ -102,16 +108,18 @@ class Poisson_2D(pdes.AbstractPDEx):
         f = eval(self.rhs, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
         diff = eval(self.diff, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
     
-        return alpha *(u_xx * diff[0] + u_yy * diff[3] + f)  
-
-    def post_processing(self, x, mu, w):
-        x1, x2 = x.get_coordinates()
-        return x1 * (1 - x1) * x2 * (1 - x2) * w
-
+        return (u_xx * diff[0] + u_yy * diff[3] + f)  
+    
     def reference_solution(self, x, mu):
         x1, x2 = x.get_coordinates()
         alpha = self.get_parameters(mu)
-        return alpha * eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+        return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
+   
+    """
+    def post_processing(self, x, mu, w):
+        x1, x2 = x.get_coordinates()
+        return x1 * (1 - x1) * x2 * (1 - x2) * w
+    """
 
 class Poisson_2D_ellipse(pdes.AbstractPDEx):
     def __init__(self, space_domain):
@@ -170,7 +178,7 @@ def Jacobian_disk_to_potato(x):
     return 0, 0, 0, 0
 
 
-def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
+def Run_laplacian2D(pde, epoch =100, bc_loss_bool=False, w_bc=0, w_res=1.0):
     x_sampler = sampling_pde.XSampler(pde=pde)
     mu_sampler = sampling_parameters.MuSampler(
         sampler=uniform_sampling.UniformSampling, model=pde
@@ -207,11 +215,11 @@ def Run_laplacian2D(pde, bc_loss_bool=False, w_bc=0, w_res=1.0):
 
     if not bc_loss_bool:
         if new_training:
-            trainer.train(epochs=600, n_collocation=5000, n_data=0)
+            trainer.train(epochs=epoch, n_collocation=5000, n_data=0)
     else:
         if new_training:
             trainer.train(
-                epochs=600, n_collocation=5000, n_bc_collocation=1000, n_data=0
+                epochs=epoch, n_collocation=5000, n_bc_collocation=1000, n_data=0
             )
 
     trainer.plot(20000, reference_solution=True)
