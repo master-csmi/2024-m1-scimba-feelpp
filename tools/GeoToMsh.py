@@ -17,3 +17,5 @@ def geo_to_msh(geo_file, msh_file, mesh_size=0.1):
     gmsh.write(msh_file)
 
     gmsh.finalize()
+
+#geo_to_msh("../geo/disk.geo", "example.msh", mesh_size=0.1)

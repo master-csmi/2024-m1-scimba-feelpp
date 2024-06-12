@@ -32,7 +32,7 @@ class Poisson_feel:
     self.order = order  
 ##______________________________________________________________________________________________
 
-  def genCube(self, filename, h=0.1):
+  def genCube(self, filename, h=0.1, shape = 'Box'):
     """
     Generate a cube geometry following the dimension  self.dim
     """
@@ -50,13 +50,22 @@ class Poisson_feel:
       Physical Curve("Gamma_D") = {1,2,3,4};
       Physical Surface("Omega") = {1};
       """
-    elif self.dim==3 :
-      geo+="""
-      Box(1) = {0, 0, 0, 1, 1, 1};
-      Characteristic Length{ PointsOf{ Volume{1}; } } = h;
-      Physical Surface("Gamma_D") = {1,2,3,4,5,6};
-      Physical Volume("Omega") = {1};
-      """
+      
+    elif self.dim == 3:
+      if shape == 'Box':
+        geo += """
+        Box(1) = {0, 0, 0, 1, 1, 1};
+        Characteristic Length{ PointsOf{ Volume{1}; } } = h;
+        Physical Surface("Gamma_D") = {1,2,3,4,5,6};
+        Physical Volume("Omega") = {1};
+        """
+        
+      elif shape == 'Sphere':
+        geo += """
+        Sphere(1) = {0, 0, 0, 1.0};
+        Physical Surface("Gamma_D") = {1};
+        Physical Volume("Omega") = {1};
+        """
     with open(filename, 'w') as f:
       f.write(geo)
 

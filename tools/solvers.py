@@ -88,7 +88,8 @@ class Poisson:
   def feel_solver(self, filename, h, json, dim=2,verbose=False):
     if verbose:
       print(f"Solving the laplacian problem for hsize = {h}...")
-    self.pb.setMesh(self.getMesh(filename,hsize=h,dim=dim,verbose=verbose))
+    feelpp_mesh = feelpp.load(feelpp.mesh(dim=self.dim, realdim=self.dim), filename, h)
+    self.pb.setMesh(feelpp_mesh)    
     self.pb.setModelProperties(json)
     self.pb.init(buildModelAlgebraicFactory=True)
     self.pb.printAndSaveInfo()
