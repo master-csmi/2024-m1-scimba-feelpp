@@ -47,9 +47,10 @@ class PoissonDisk2D(pdes.AbstractPDEx):
 
     def bc_residual(self, w, x, mu, **kwargs):
         u = self.get_variables(w)
+        alpha = self.get_parameters(mu)
         x1, x2 = x.get_coordinates()
         g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
-        return u - g_evaluated
+        return (u - g_evaluated)
 
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
@@ -68,7 +69,6 @@ class PoissonDisk2D(pdes.AbstractPDEx):
         alpha = self.get_parameters(mu)
 
         return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
-
 
 class Poisson_2D(pdes.AbstractPDEx):
     def __init__(self, space_domain,  
@@ -94,10 +94,11 @@ class Poisson_2D(pdes.AbstractPDEx):
 
     def bc_residual(self, w, x, mu, **kwargs):
         u = self.get_variables(w)
+        alpha = self.get_parameters(mu)
         # Évaluation de la condition aux limites g
         x1, x2 = x.get_coordinates()
         g_evaluated = eval(self.g, {'x': x1, 'y': x2, 'pi': PI, 'sin' : torch.sin, 'cos': torch.cos})
-        return u - g_evaluated
+        return (u - g_evaluated)
 
     def residual(self, w, x, mu, **kwargs):
         x1, x2 = x.get_coordinates()
@@ -114,13 +115,11 @@ class Poisson_2D(pdes.AbstractPDEx):
         x1, x2 = x.get_coordinates()
         alpha = self.get_parameters(mu)
         return eval(self.u_exact, {'x': x1, 'y': x2, 'pi': PI, 'sin': torch.sin, 'cos': torch.cos})
-   
     """
     def post_processing(self, x, mu, w):
         x1, x2 = x.get_coordinates()
         return x1 * (1 - x1) * x2 * (1 - x2) * w
     """
-
 class Poisson_2D_ellipse(pdes.AbstractPDEx):
     def __init__(self, space_domain):
         super().__init__(
@@ -232,6 +231,10 @@ if __name__ == "__main__":
     xdomain = domain.SpaceDomain(2, domain.SquareDomain(2, [[0.0, 1.0], [0.0, 1.0]]))
     print(xdomain)
 
+    u_exact = 'x'
+    pde = Poisson_2D(xdomain, rhs='-1.0-4*y*x+y*y', g='x', u_exact=u_exact)
+    network, pde = Run_laplacian2D(pde)
+    
     u_exact='sin(2 * pi * x) * sin(2 * pi * y)'       
     pde = Poisson_2D(xdomain,  rhs='8*pi*pi*sin(2*pi*x)*sin(2*pi*y)', g='0',  u_exact=u_exact)
     network, pde = Run_laplacian2D(pde)
